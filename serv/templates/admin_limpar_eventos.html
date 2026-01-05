@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Limpar Eventos - Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-trash"></i> Limpar Eventos do Banco</h2>
+  <p class="text-muted">Gerencie e limpe eventos de impressão do banco de dados</p>
+</div>
+
+{% if message %}
+<div class="alert alert-{{ message_type }} alert-dismissible fade show" role="alert">
+  {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<!-- Estatísticas -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-list-ul"></i> Total de Eventos</h5>
+        <h2 class="text-primary">{{ total_eventos|default(0) }}</h2>
+        <small class="text-muted">Registros na tabela events</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-printer"></i> Jobs Únicos</h5>
+        <h2 class="text-success">{{ total_jobs|default(0) }}</h2>
+        <small class="text-muted">Impressões únicas (agrupadas)</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-calendar"></i> Período</h5>
+        <p class="mb-0">
+          <strong>Mais antigo:</strong><br>
+          <small>{{ evento_mais_antigo or 'N/A' }}</small>
+        </p>
+        <p class="mb-0 mt-2">
+          <strong>Mais recente:</strong><br>
+          <small>{{ evento_mais_recente or 'N/A' }}</small>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Eventos por Mês -->
+{% if eventos_por_mes %}
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Eventos por Mês (Últimos 6 meses)</h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th>Total de Eventos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for mes, total in eventos_por_mes %}
+          <tr>
+            <td>{{ mes }}</td>
+            <td><strong>{{ total }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Opções de Limpeza -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card border-danger">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Ações de Limpeza</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning">
+          <strong><i class="bi bi-exclamation-triangle-fill"></i> Atenção!</strong><br>
+          As ações abaixo são <strong>irreversíveis</strong>. Certifique-se de fazer backup antes de limpar eventos.
+        </div>
+
+        <!-- Limpar Todos -->
+        <div class="mb-4 p-3 border rounded">
+          <h5><i class="bi bi-trash-fill text-danger"></i> Limpar Todos os Eventos</h5>
+          <p class="text-muted">Remove <strong>TODOS</strong> os eventos do banco de dados.</p>
+          <form method="POST" action="{{ url_for('admin_limpar_eventos') }}" onsubmit="return confirm('⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja deletar TODOS os eventos?');">
+            {% if CSRF_ENABLED %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% endif %}
+            <input type="hidden" name="action" value="todos">
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Limpar Todos os Eventos
+            </button>
+          </form>
+        </div>
+
+        <!-- Limpar por Período -->
+        <div class="mb-4 p-3 border rounded">
+          <h5><i class="bi bi-calendar-range"></i> Limpar por Período</h5>
+          <p class="text-muted">Remove eventos de um período específico.</p>
+          <form method="POST" action="{{ url_for('admin_limpar_eventos') }}" onsubmit="return confirm('⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja deletar os eventos do período especificado?');">
+            {% if CSRF_ENABLED %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% endif %}
+            <input type="hidden" name="action" value="periodo">
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label">Data Início</label>
+                <input type="date" name="start_date" class="form-control" required>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">Data Fim</label>
+                <input type="date" name="end_date" class="form-control" required>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-warning w-100">
+                  <i class="bi bi-trash"></i> Limpar
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Limpar Antigos -->
+        <div class="mb-4 p-3 border rounded">
+          <h5><i class="bi bi-clock-history"></i> Limpar Eventos Antigos</h5>
+          <p class="text-muted">Remove eventos mais antigos que X dias.</p>
+          <form method="POST" action="{{ url_for('admin_limpar_eventos') }}" onsubmit="return confirm('⚠️ ATENÇÃO: Esta ação é IRREVERSÍVEL!\n\nTem certeza que deseja deletar os eventos mais antigos que o período especificado?');">
+            {% if CSRF_ENABLED %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {% endif %}
+            <input type="hidden" name="action" value="antigos">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Dias</label>
+                <input type="number" name="dias" class="form-control" value="90" min="1" required>
+                <small class="text-muted">Eventos mais antigos que este número de dias serão removidos</small>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-warning">
+                  <i class="bi bi-trash"></i> Limpar
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Link para Backup -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="alert alert-info">
+      <strong><i class="bi bi-info-circle"></i> Dica:</strong>
+      Antes de limpar eventos, considere fazer um <a href="{{ url_for('admin_backup') }}" class="alert-link">backup do banco de dados</a>.
+    </div>
+  </div>
+</div>
+{% endblock %}
+

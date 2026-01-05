@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Admin - Quotas{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-clipboard-check"></i> Administração de Quotas</h2>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <i class="bi bi-info-circle"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Criar Nova Quota</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      <input type="hidden" name="action" value="create">
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-select" required>
+          <option value="user">Usuário</option>
+          <option value="setor">Setor</option>
+          <option value="impressora">Impressora</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Referência</label>
+        <input type="text" name="referencia" class="form-control" placeholder="Nome do usuário, setor ou impressora" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Limite Mensal</label>
+        <input type="number" name="limite_mensal" class="form-control" placeholder="Páginas">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Limite Trimestral</label>
+        <input type="number" name="limite_trimestral" class="form-control" placeholder="Páginas">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Limite Anual</label>
+        <input type="number" name="limite_anual" class="form-control" placeholder="Páginas">
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary btn-modern">
+          <i class="bi bi-save"></i> Criar Quota
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Quotas Configuradas</h5>
+  </div>
+  <div class="card-body">
+    {% if quotas %}
+    <div class="table-responsive">
+      <table class="table table-modern">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Referência</th>
+            <th>Limite Mensal</th>
+            <th>Limite Trimestral</th>
+            <th>Limite Anual</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for quota in quotas %}
+          <tr>
+            <td>
+              {% if quota.tipo == 'user' %}
+              <span class="badge bg-primary badge-modern">Usuário</span>
+              {% elif quota.tipo == 'setor' %}
+              <span class="badge bg-info badge-modern">Setor</span>
+              {% else %}
+              <span class="badge bg-secondary badge-modern">Impressora</span>
+              {% endif %}
+            </td>
+            <td><strong>{{ quota.referencia }}</strong></td>
+            <td>{{ quota.limite_mensal or '-' }}</td>
+            <td>{{ quota.limite_trimestral or '-' }}</td>
+            <td>{{ quota.limite_anual or '-' }}</td>
+            <td>
+              <form method="post" style="display: inline;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="tipo" value="{{ quota.tipo }}">
+                <input type="hidden" name="referencia" value="{{ quota.referencia }}">
+                <button type="submit" class="btn btn-danger btn-sm btn-modern" 
+                        onclick="return confirm('Confirma remoção da quota?');">
+                  <i class="bi bi-trash"></i> Remover
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle"></i> Nenhuma quota configurada.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

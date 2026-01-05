@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Comparativo de Períodos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header mb-4">
+        <h1><i class="bi bi-arrow-left-right"></i> Comparativo de Períodos</h1>
+        <p class="text-muted">Compare períodos diferentes para analisar tendências</p>
+    </div>
+
+    <div class="filter-card mb-4">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Período</label>
+                <select name="periodo" class="form-select">
+                    <option value="mes" {% if periodo == "mes" %}selected{% endif %}>Mensal</option>
+                    <option value="trimestre" {% if periodo == "trimestre" %}selected{% endif %}>Trimestral</option>
+                    <option value="ano" {% if periodo == "ano" %}selected{% endif %}>Anual</option>
+                    <option value="semana" {% if periodo == "semana" %}selected{% endif %}>Semanal</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tipo de Referência</label>
+                <select name="tipo_ref" class="form-select">
+                    <option value="geral" {% if tipo_ref == "geral" %}selected{% endif %}>Geral</option>
+                    <option value="user" {% if tipo_ref == "user" %}selected{% endif %}>Usuário</option>
+                    <option value="setor" {% if tipo_ref == "setor" %}selected{% endif %}>Setor</option>
+                    <option value="impressora" {% if tipo_ref == "impressora" %}selected{% endif %}>Impressora</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Referência</label>
+                <input type="text" name="referencia" class="form-control" value="{{ referencia or '' }}" placeholder="Nome do usuário, setor ou impressora">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-modern w-100">
+                    <i class="bi bi-search"></i> Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if dados %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5>Período Atual</h5>
+                <p class="text-muted small">{{ dados.periodo_atual.inicio }} até {{ dados.periodo_atual.fim }}</p>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Impressões:</span>
+                        <strong>{{ dados.periodo_atual.dados.total_impressos }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Páginas:</span>
+                        <strong>{{ dados.periodo_atual.dados.total_paginas }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Custo:</span>
+                        <strong>R$ {{ "%.2f"|format(dados.periodo_atual.dados.custo_total) }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card secondary">
+                <h5>Período Anterior</h5>
+                <p class="text-muted small">{{ dados.periodo_anterior.inicio }} até {{ dados.periodo_anterior.fim }}</p>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Impressões:</span>
+                        <strong>{{ dados.periodo_anterior.dados.total_impressos }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Páginas:</span>
+                        <strong>{{ dados.periodo_anterior.dados.total_paginas }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Custo:</span>
+                        <strong>R$ {{ "%.2f"|format(dados.periodo_anterior.dados.custo_total) }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stat-card success">
+        <h5><i class="bi bi-graph-up-arrow"></i> Variações</h5>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="h4 {% if dados.variacoes.impressoes.percentual > 0 %}text-danger{% elif dados.variacoes.impressoes.percentual < 0 %}text-success{% else %}text-muted{% endif %}">
+                        {{ "%+.1f"|format(dados.variacoes.impressoes.percentual) }}%
+                    </div>
+                    <small class="text-muted">Impressões</small>
+                    <div class="small">({{ "%+.0f"|format(dados.variacoes.impressoes.absoluta) }})</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="h4 {% if dados.variacoes.paginas.percentual > 0 %}text-danger{% elif dados.variacoes.paginas.percentual < 0 %}text-success{% else %}text-muted{% endif %}">
+                        {{ "%+.1f"|format(dados.variacoes.paginas.percentual) }}%
+                    </div>
+                    <small class="text-muted">Páginas</small>
+                    <div class="small">({{ "%+.0f"|format(dados.variacoes.paginas.absoluta) }})</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="h4 {% if dados.variacoes.custo.percentual > 0 %}text-danger{% elif dados.variacoes.custo.percentual < 0 %}text-success{% else %}text-muted{% endif %}">
+                        {{ "%+.1f"|format(dados.variacoes.custo.percentual) }}%
+                    </div>
+                    <small class="text-muted">Custo</small>
+                    <div class="small">(R$ {{ "%+.2f"|format(dados.variacoes.custo.absoluta) }})</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Selecione os filtros e clique em "Filtrar" para ver o comparativo.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

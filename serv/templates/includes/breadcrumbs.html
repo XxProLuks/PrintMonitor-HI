@@ -1,0 +1,26 @@
+<!-- Breadcrumbs -->
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb" style="background: transparent; padding: 0;">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for('dashboard') }}" style="color: var(--link-color);">
+        <i class="bi bi-house-door"></i> Dashboard
+      </a>
+    </li>
+    {% if breadcrumbs %}
+      {% for breadcrumb in breadcrumbs %}
+        {% if loop.last %}
+          <li class="breadcrumb-item active" aria-current="page" style="color: var(--text-primary);">
+            {{ breadcrumb.text }}
+          </li>
+        {% else %}
+          <li class="breadcrumb-item">
+            <a href="{{ breadcrumb.url }}" style="color: var(--link-color);">
+              {{ breadcrumb.text }}
+            </a>
+          </li>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  </ol>
+</nav>
+

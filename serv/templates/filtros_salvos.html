@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Filtros Salvos - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-bookmark-star"></i> Filtros Salvos</h2>
+  <p class="text-muted">Gerencie seus filtros favoritos para análises rápidas</p>
+</div>
+
+<!-- Formulário para salvar novo filtro -->
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Salvar Novo Filtro</h5>
+  </div>
+  <div class="card-body">
+    <form id="form-salvar-filtro">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group mb-3">
+            <label for="nome-filtro">Nome do Filtro</label>
+            <input type="text" class="form-control" id="nome-filtro" required placeholder="Ex: Relatório Mensal">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group mb-3">
+            <label for="tipo-filtro">Tipo</label>
+            <select class="form-control" id="tipo-filtro" required>
+              <option value="dashboard">Dashboard</option>
+              <option value="usuarios">Usuários</option>
+              <option value="setores">Setores</option>
+              <option value="impressoras">Impressoras</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group mb-3">
+            <label for="data-inicio">Data Início</label>
+            <input type="date" class="form-control" id="data-inicio">
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="form-group mb-3">
+            <label for="data-fim">Data Fim</label>
+            <input type="date" class="form-control" id="data-fim">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="filtro-padrao">
+            <label class="form-check-label" for="filtro-padrao">
+              Usar como filtro padrão
+            </label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="filtro-compartilhado">
+            <label class="form-check-label" for="filtro-compartilhado">
+              Compartilhar com outros usuários
+            </label>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-modern">
+        <i class="bi bi-save"></i> Salvar Filtro
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Lista de filtros salvos -->
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Meus Filtros</h5>
+  </div>
+  <div class="card-body">
+    {% if filtros %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Filtros</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for filtro in filtros %}
+          <tr>
+            <td><strong>{{ filtro.nome }}</strong></td>
+            <td><span class="badge bg-info">{{ filtro.tipo }}</span></td>
+            <td>
+              <small class="text-muted">
+                {% for key, value in filtro.filtros.items() %}
+                  {{ key }}: {{ value }}<br>
+                {% endfor %}
+              </small>
+            </td>
+            <td>
+              {% if filtro.padrao %}
+                <span class="badge bg-success">Padrão</span>
+              {% endif %}
+              {% if filtro.compartilhado %}
+                <span class="badge bg-primary">Compartilhado</span>
+              {% endif %}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="aplicarFiltro({{ filtro.id }})">
+                <i class="bi bi-play-fill"></i> Aplicar
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deletarFiltro({{ filtro.id }})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+      <p class="text-muted mt-3">Nenhum filtro salvo ainda.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.getElementById('form-salvar-filtro').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const filtro = {
+    nome: document.getElementById('nome-filtro').value,
+    tipo: document.getElementById('tipo-filtro').value,
+    filtros: {
+      data_inicio: document.getElementById('data-inicio').value,
+      data_fim: document.getElementById('data-fim').value
+    },
+    padrao: document.getElementById('filtro-padrao').checked,
+    compartilhado: document.getElementById('filtro-compartilhado').checked
+  };
+  
+  try {
+    const response = await fetch('/api/filtros/salvar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(filtro)
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+      location.reload();
+    } else {
+      alert('Erro ao salvar filtro: ' + data.error);
+    }
+  } catch (error) {
+    alert('Erro ao salvar filtro: ' + error);
+  }
+});
+
+async function deletarFiltro(id) {
+  if (!confirm('Deseja realmente deletar este filtro?')) return;
+  
+  try {
+    const response = await fetch(`/api/filtros/deletar?id=${id}`, {
+      method: 'DELETE'
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+      location.reload();
+    } else {
+      alert('Erro ao deletar filtro: ' + data.error);
+    }
+  } catch (error) {
+    alert('Erro ao deletar filtro: ' + error);
+  }
+}
+
+function aplicarFiltro(id) {
+  // Implementar lógica para aplicar filtro
+  alert('Funcionalidade de aplicar filtro será implementada');
+}
+</script>
+{% endblock %}
+

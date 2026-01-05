@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Admin - Relatórios Agendados{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-calendar-check"></i> Relatórios Agendados</h2>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <i class="bi bi-info-circle"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Criar Novo Relatório Agendado</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      <input type="hidden" name="action" value="create">
+      <div class="col-md-3">
+        <label class="form-label">Nome</label>
+        <input type="text" name="nome" class="form-control" placeholder="Nome do relatório" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-select" required>
+          <option value="dashboard">Dashboard</option>
+          <option value="setores">Setores</option>
+          <option value="usuarios">Usuários</option>
+          <option value="impressoras">Impressoras</option>
+          <option value="geral">Geral</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Frequência</label>
+        <select name="frequencia" class="form-select" required>
+          <option value="diario">Diário</option>
+          <option value="semanal">Semanal</option>
+          <option value="mensal">Mensal</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Hora</label>
+        <input type="time" name="hora" class="form-control" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Dia da Semana (se semanal)</label>
+        <select name="dia_semana" class="form-select">
+          <option value="">-</option>
+          <option value="0">Segunda</option>
+          <option value="1">Terça</option>
+          <option value="2">Quarta</option>
+          <option value="3">Quinta</option>
+          <option value="4">Sexta</option>
+          <option value="5">Sábado</option>
+          <option value="6">Domingo</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Dia do Mês (se mensal)</label>
+        <input type="number" name="dia_mes" class="form-control" min="1" max="31" placeholder="1-31">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Destinatários (emails separados por vírgula)</label>
+        <input type="text" name="destinatarios" class="form-control" placeholder="email1@exemplo.com, email2@exemplo.com" required>
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary btn-modern">
+          <i class="bi bi-save"></i> Criar Agendamento
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Relatórios Agendados</h5>
+  </div>
+  <div class="card-body">
+    {% if relatorios %}
+    <div class="table-responsive">
+      <table class="table table-modern">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Frequência</th>
+            <th>Hora</th>
+            <th>Destinatários</th>
+            <th>Último Envio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for relatorio in relatorios %}
+          <tr>
+            <td><strong>{{ relatorio.nome }}</strong></td>
+            <td>{{ relatorio.tipo }}</td>
+            <td>{{ relatorio.frequencia }}</td>
+            <td>{{ relatorio.hora }}</td>
+            <td>{{ relatorio.destinatarios }}</td>
+            <td>{{ relatorio.ultimo_envio[:19] if relatorio.ultimo_envio else 'Nunca' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle"></i> Nenhum relatório agendado.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Setores - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-building"></i> Setores</h2>
+</div>
+
+<div class="filter-card">
+  <form class="row g-3" method="get" action="{{ url_for('painel_setores') }}">
+    <div class="col-md-3">
+      <label for="start_date" class="form-label"><i class="bi bi-calendar-event"></i> Data Início</label>
+      <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+    </div>
+    <div class="col-md-3">
+      <label for="end_date" class="form-label"><i class="bi bi-calendar-event-fill"></i> Data Fim</label>
+      <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+    </div>
+    <div class="col-md-4">
+      <label for="filtro_setor" class="form-label"><i class="bi bi-search"></i> Filtro Setor</label>
+      <input type="text" id="filtro_setor" name="filtro_setor" class="form-control" placeholder="Digite o nome do setor..." value="{{ filtro_setor }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary btn-modern w-100">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-12">
+      <a href="{{ url_for('export_setores_excel', start_date=start_date, end_date=end_date, filtro_setor=filtro_setor) }}" 
+         class="btn btn-success btn-modern">
+        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+      </a>
+    </div>
+  </form>
+</div>
+
+{% if setores and setores|length > 0 %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="alert alert-info border-0 shadow-sm">
+      <i class="bi bi-info-circle"></i> 
+      <strong>Total de setores:</strong> {{ setores|length }} | 
+      <strong>Total de páginas:</strong> {{ setores|sum(attribute='total_paginas') }} | 
+      <strong>Valor total estimado:</strong> R$ {{ "%.2f"|format(setores|sum(attribute='valor_estimado')) }}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-modern">
+    <thead>
+      <tr>
+        <th style="width: 5%;">#</th>
+        <th><i class="bi bi-building"></i> Setor</th>
+        <th><i class="bi bi-printer"></i> Total Impressões</th>
+        <th><i class="bi bi-file-text"></i> Total Páginas</th>
+        <th><i class="bi bi-currency-dollar"></i> Valor Estimado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for setor in setores %}
+      <tr>
+        <td class="text-muted">{{ loop.index }}</td>
+        <td>
+          <strong>{{ setor['sector'] }}</strong>
+          {% if usuarios_por_setor and setor['sector'] in usuarios_por_setor %}
+            <br><small class="text-muted">
+              <i class="bi bi-people"></i> {{ usuarios_por_setor[setor['sector']]|length }} usuário(s)
+            </small>
+          {% endif %}
+        </td>
+        <td><span class="badge bg-primary badge-modern">{{ setor['total_impressos'] }}</span></td>
+        <td><span class="badge bg-info badge-modern">{{ setor['total_paginas'] }}</span></td>
+        <td>
+          <strong class="text-success fs-5">R$ {{ "%.2f"|format(setor['valor_estimado'] or 0) }}</strong>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="text-muted mt-3">Nenhum registro encontrado.</p>
+          <p class="text-muted small">Tente ajustar os filtros de data ou setor.</p>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if usuarios_por_setor and usuarios_por_setor|length > 0 %}
+<div class="card mt-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-people"></i> Usuários por Setor</h5>
+    <p class="text-muted small mb-0">Lista de usuários agrupados por setor (filtros aplicados)</p>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      {% for setor, usuarios in usuarios_por_setor.items() %}
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card border">
+          <div class="card-body">
+            <h6 class="text-primary mb-3">
+              <i class="bi bi-building"></i> {{ setor }}
+              <span class="badge bg-primary badge-modern ms-2">{{ usuarios|length }}</span>
+            </h6>
+            <div class="d-flex flex-wrap gap-2">
+              {% for user in usuarios %}
+              <span class="badge bg-secondary badge-modern">{{ user }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

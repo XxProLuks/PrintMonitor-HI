@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% block title %}Widgets Personalizados - Print Monitor{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-grid-3x3-gap-fill"></i> Widgets Personalizados</h2>
+  <p class="text-muted">Gerencie seus widgets personalizados do dashboard</p>
+</div>
+
+<!-- Botões de Ação -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <button class="btn btn-modern" data-bs-toggle="modal" data-bs-target="#modalNovoWidget">
+    <i class="bi bi-plus-circle"></i> Novo Widget
+  </button>
+  <div>
+    <button class="btn btn-secondary btn-modern" onclick="salvarLayout()">
+      <i class="bi bi-save"></i> Salvar Layout
+    </button>
+    <button class="btn btn-secondary btn-modern" onclick="resetarLayout()">
+      <i class="bi bi-arrow-clockwise"></i> Resetar
+    </button>
+  </div>
+</div>
+
+<!-- Grid de Widgets -->
+<div class="widgets-grid" id="widgetsGrid">
+  <div class="text-center p-5 text-muted">
+    <i class="bi bi-grid-3x3-gap" style="font-size: 3rem;"></i>
+    <p class="mt-3">Nenhum widget personalizado ainda. Clique em "Novo Widget" para começar.</p>
+  </div>
+</div>
+
+<!-- Modal: Novo Widget -->
+<div class="modal fade" id="modalNovoWidget" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-primary);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-primary);">
+        <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Novo Widget</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formNovoWidget">
+          <div class="mb-3">
+            <label class="form-label">Tipo de Widget</label>
+            <select class="form-control" id="widgetTipo" name="tipo" required style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+              <option value="grafico_linha">Gráfico de Linha</option>
+              <option value="grafico_barra">Gráfico de Barras</option>
+              <option value="grafico_pizza">Gráfico de Pizza</option>
+              <option value="metricas">Métricas</option>
+              <option value="tabela">Tabela de Dados</option>
+              <option value="texto">Texto/HTML</option>
+              <option value="iframe">iFrame</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" id="widgetTitulo" name="titulo" required style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+          </div>
+          <div class="mb-3" id="configContainer">
+            <label class="form-label">Configuração (JSON)</label>
+            <textarea class="form-control" id="widgetConfig" name="configuracao" rows="5" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary); font-family: monospace;">{}</textarea>
+            <small class="text-muted">Configure o widget em formato JSON</small>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Largura (colunas)</label>
+              <input type="number" class="form-control" id="widgetLargura" name="largura" value="4" min="1" max="12" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Altura (linhas)</label>
+              <input type="number" class="form-control" id="widgetAltura" name="altura" value="3" min="1" max="10" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid var(--border-primary);">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-modern" onclick="criarWidget()">Criar Widget</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar Widget -->
+<div class="modal fade" id="modalEditarWidget" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border-primary);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border-primary);">
+        <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Widget</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(1);"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditarWidget">
+          <input type="hidden" id="editWidgetId">
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" id="editWidgetTitulo" required style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Configuração (JSON)</label>
+            <textarea class="form-control" id="editWidgetConfig" rows="5" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary); font-family: monospace;"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Largura (colunas)</label>
+              <input type="number" class="form-control" id="editWidgetLargura" min="1" max="12" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Altura (linhas)</label>
+              <input type="number" class="form-control" id="editWidgetAltura" min="1" max="10" style="background: var(--input-bg); border: 1px solid var(--border-primary); color: var(--text-primary);">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid var(--border-primary);">
+        <button type="button" class="btn btn-danger" onclick="deletarWidget()">Excluir</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-modern" onclick="salvarEdicaoWidget()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  min-height: 400px;
+}
+
+.widget-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-lg);
+  padding: 16px;
+  position: relative;
+  cursor: move;
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
+}
+
+.widget-item:hover {
+  border-color: var(--sidebar-active);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.widget-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.widget-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.widget-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.widget-actions button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.widget-actions button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.widget-content {
+  min-height: 100px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+</style>
+
+<script>
+let widgets = [];
+let widgetEditando = null;
+
+// Carregar widgets ao iniciar
+document.addEventListener('DOMContentLoaded', () => {
+  carregarWidgets();
+});
+
+function carregarWidgets() {
+  fetch('/api/dashboard/widgets/custom')
+    .then(res => res.json())
+    .then(data => {
+      if (data.widgets) {
+        widgets = data.widgets;
+        renderizarWidgets();
+      }
+    })
+    .catch(err => {
+      console.error('Erro ao carregar widgets:', err);
+    });
+}
+
+function renderizarWidgets() {
+  const grid = document.getElementById('widgetsGrid');
+  
+  if (widgets.length === 0) {
+    grid.innerHTML = `
+      <div class="text-center p-5 text-muted" style="grid-column: 1 / -1;">
+        <i class="bi bi-grid-3x3-gap" style="font-size: 3rem;"></i>
+        <p class="mt-3">Nenhum widget personalizado ainda. Clique em "Novo Widget" para começar.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  grid.innerHTML = '';
+  
+  widgets.forEach(widget => {
+    if (!widget.ativo) return;
+    
+    const widgetEl = document.createElement('div');
+    widgetEl.className = 'widget-item';
+    widgetEl.dataset.widgetId = widget.id;
+    widgetEl.style.gridColumn = `span ${widget.tamanho.largura}`;
+    widgetEl.style.gridRow = `span ${widget.tamanho.altura}`;
+    
+    widgetEl.innerHTML = `
+      <div class="widget-header">
+        <h6 class="widget-title">${escapeHtml(widget.titulo)}</h6>
+        <div class="widget-actions">
+          <button onclick="editarWidget(${widget.id})" title="Editar">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button onclick="toggleWidget(${widget.id})" title="${widget.ativo ? 'Desativar' : 'Ativar'}">
+            <i class="bi bi-${widget.ativo ? 'eye-slash' : 'eye'}"></i>
+          </button>
+        </div>
+      </div>
+      <div class="widget-content">
+        <div class="text-muted">Tipo: ${widget.tipo}</div>
+        <div class="text-muted mt-2">${JSON.stringify(widget.configuracao || {})}</div>
+      </div>
+    `;
+    
+    grid.appendChild(widgetEl);
+  });
+  
+  // Inicializar Sortable
+  new Sortable(grid, {
+    animation: 150,
+    handle: '.widget-item',
+    onEnd: function(evt) {
+      // Atualizar posições
+      const items = Array.from(grid.children);
+      items.forEach((item, index) => {
+        const widgetId = item.dataset.widgetId;
+        if (widgetId) {
+          atualizarPosicaoWidget(parseInt(widgetId), index % 12, Math.floor(index / 12));
+        }
+      });
+    }
+  });
+}
+
+function criarWidget() {
+  const form = document.getElementById('formNovoWidget');
+  const formData = new FormData(form);
+  
+  let config = {};
+  try {
+    config = JSON.parse(document.getElementById('widgetConfig').value || '{}');
+  } catch (e) {
+    alert('JSON inválido na configuração');
+    return;
+  }
+  
+  const data = {
+    tipo: document.getElementById('widgetTipo').value,
+    titulo: document.getElementById('widgetTitulo').value,
+    configuracao: config,
+    largura: parseInt(document.getElementById('widgetLargura').value),
+    altura: parseInt(document.getElementById('widgetAltura').value),
+    posicao_x: 0,
+    posicao_y: 0
+  };
+  
+  fetch('/api/dashboard/widgets/custom', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        bootstrap.Modal.getInstance(document.getElementById('modalNovoWidget')).hide();
+        form.reset();
+        carregarWidgets();
+      } else {
+        alert('Erro: ' + (data.error || 'Erro desconhecido'));
+      }
+    })
+    .catch(err => {
+      console.error('Erro:', err);
+      alert('Erro ao criar widget');
+    });
+}
+
+function editarWidget(id) {
+  const widget = widgets.find(w => w.id === id);
+  if (!widget) return;
+  
+  widgetEditando = id;
+  document.getElementById('editWidgetId').value = id;
+  document.getElementById('editWidgetTitulo').value = widget.titulo;
+  document.getElementById('editWidgetConfig').value = JSON.stringify(widget.configuracao || {}, null, 2);
+  document.getElementById('editWidgetLargura').value = widget.tamanho.largura;
+  document.getElementById('editWidgetAltura').value = widget.tamanho.altura;
+  
+  new bootstrap.Modal(document.getElementById('modalEditarWidget')).show();
+}
+
+function salvarEdicaoWidget() {
+  const id = widgetEditando;
+  if (!id) return;
+  
+  let config = {};
+  try {
+    config = JSON.parse(document.getElementById('editWidgetConfig').value || '{}');
+  } catch (e) {
+    alert('JSON inválido na configuração');
+    return;
+  }
+  
+  const data = {
+    id: id,
+    titulo: document.getElementById('editWidgetTitulo').value,
+    configuracao: config,
+    largura: parseInt(document.getElementById('editWidgetLargura').value),
+    altura: parseInt(document.getElementById('editWidgetAltura').value)
+  };
+  
+  fetch('/api/dashboard/widgets/custom', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarWidget')).hide();
+        carregarWidgets();
+      } else {
+        alert('Erro: ' + (data.error || 'Erro desconhecido'));
+      }
+    })
+    .catch(err => {
+      console.error('Erro:', err);
+      alert('Erro ao salvar widget');
+    });
+}
+
+function deletarWidget() {
+  if (!confirm('Tem certeza que deseja excluir este widget?')) return;
+  
+  const id = widgetEditando;
+  if (!id) return;
+  
+  fetch('/api/dashboard/widgets/custom', {
+    method: 'DELETE',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id: id})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarWidget')).hide();
+        carregarWidgets();
+      } else {
+        alert('Erro: ' + (data.error || 'Erro desconhecido'));
+      }
+    })
+    .catch(err => {
+      console.error('Erro:', err);
+      alert('Erro ao excluir widget');
+    });
+}
+
+function toggleWidget(id) {
+  const widget = widgets.find(w => w.id === id);
+  if (!widget) return;
+  
+  fetch('/api/dashboard/widgets/custom', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id: id, ativo: !widget.ativo})
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        carregarWidgets();
+      }
+    })
+    .catch(err => {
+      console.error('Erro:', err);
+    });
+}
+
+function atualizarPosicaoWidget(id, x, y) {
+  fetch('/api/dashboard/widgets/custom', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id: id, posicao_x: x, posicao_y: y})
+  })
+    .catch(err => console.error('Erro ao atualizar posição:', err));
+}
+
+function salvarLayout() {
+  // Layout já é salvo automaticamente ao arrastar
+  alert('Layout salvo automaticamente!');
+}
+
+function resetarLayout() {
+  if (!confirm('Tem certeza que deseja resetar o layout? Todas as posições serão perdidas.')) return;
+  
+  widgets.forEach(widget => {
+    atualizarPosicaoWidget(widget.id, 0, 0);
+  });
+  
+  setTimeout(() => carregarWidgets(), 500);
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+</script>
+{% endblock %}
+

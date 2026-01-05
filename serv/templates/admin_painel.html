@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}Painel Administrativo - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-shield-check"></i> Painel Administrativo</h2>
+  <p class="text-muted">Controle completo do sistema</p>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card">
+      <h5><i class="bi bi-people"></i> Usuários</h5>
+      <h3>{{ total_usuarios }}</h3>
+      <small class="text-muted">Total cadastrados</small>
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card secondary">
+      <h5><i class="bi bi-printer"></i> Eventos</h5>
+      <h3>{{ total_eventos|default(0) }}</h3>
+      <small class="text-muted">{{ eventos_hoje|default(0) }} hoje</small>
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card success">
+      <h5><i class="bi bi-device-hdd"></i> Impressoras</h5>
+      <h3>{{ total_impressoras|default(0) }}</h3>
+      <small class="text-muted">Únicas</small>
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card warning">
+      <h5><i class="bi bi-bell"></i> Alertas</h5>
+      <h3>{{ alertas_nao_lidos|default(0) }}</h3>
+      <small class="text-muted">Não lidos</small>
+    </div>
+  </div>
+</div>
+
+<!-- Ferramentas Administrativas -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-4">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5><i class="bi bi-tools"></i> Ferramentas Rápidas</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('admin_usuarios') }}" class="btn btn-modern">
+            <i class="bi bi-people"></i> Gerenciar Usuários
+          </a>
+          <a href="{{ url_for('admin_precos') }}" class="btn btn-modern">
+            <i class="bi bi-currency-dollar"></i> Configurar Preços
+          </a>
+          <a href="{{ url_for('admin_configuracoes') }}" class="btn btn-modern">
+            <i class="bi bi-gear"></i> Configurações Gerais
+          </a>
+          <a href="{{ url_for('admin_quotas') }}" class="btn btn-modern">
+            <i class="bi bi-graph-up"></i> Quotas e Limites
+          </a>
+          <a href="{{ url_for('admin_metas') }}" class="btn btn-modern">
+            <i class="bi bi-bullseye"></i> Metas
+          </a>
+          <a href="{{ url_for('admin_orcamento') }}" class="btn btn-modern">
+            <i class="bi bi-calculator"></i> Orçamento
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-6 mb-4">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5><i class="bi bi-shield-lock"></i> Segurança e Auditoria</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('admin_logins') }}" class="btn btn-modern">
+            <i class="bi bi-clock-history"></i> Histórico de Logins
+          </a>
+          <a href="{{ url_for('admin_auditoria') }}" class="btn btn-modern">
+            <i class="bi bi-file-text"></i> Auditoria do Sistema
+          </a>
+          <a href="{{ url_for('admin_backup') }}" class="btn btn-modern">
+            <i class="bi bi-archive"></i> Backup e Restauração
+          </a>
+          <a href="{{ url_for('admin_limpar_eventos') }}" class="btn btn-modern btn-danger">
+            <i class="bi bi-trash"></i> Limpar Eventos
+          </a>
+          <a href="{{ url_for('admin_relatorios_agendados') }}" class="btn btn-modern">
+            <i class="bi bi-calendar-check"></i> Relatórios Agendados
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Informações do Sistema -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-4">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5><i class="bi bi-info-circle"></i> Informações do Sistema</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm table-borderless">
+          <tr>
+            <td><strong>Usuários Ativos (30 dias):</strong></td>
+            <td>{{ usuarios_ativos|default(0) }}</td>
+          </tr>
+          <tr>
+            <td><strong>Tamanho do Banco:</strong></td>
+            <td>{{ db_size_mb|default(0) }} MB</td>
+          </tr>
+          <tr>
+            <td><strong>Eventos Hoje:</strong></td>
+            <td>{{ eventos_hoje|default(0) }}</td>
+          </tr>
+          <tr>
+            <td><strong>Total de Eventos:</strong></td>
+            <td>{{ total_eventos|default(0) }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-6 mb-4">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5><i class="bi bi-clock"></i> Últimos Eventos</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Impressora</th>
+                <th>Páginas</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for evento in ultimos_eventos %}
+              <tr>
+                <td>{{ evento[0] or '-' }}</td>
+                <td>{{ evento[1] or '-' }}</td>
+                <td>{{ evento[2] or 0 }}</td>
+                <td><small>{{ evento[3] or '-' }}</small></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row">
+  <div class="col-12">
+    <div class="card-modern">
+      <div class="card-header-modern">
+        <h5><i class="bi bi-lightning-charge"></i> Ações Rápidas</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3 mb-2">
+            <button class="btn btn-modern w-100" onclick="executarAcao('limpar_cache')">
+              <i class="bi bi-trash"></i> Limpar Cache
+            </button>
+          </div>
+          <div class="col-md-3 mb-2">
+            <button class="btn btn-modern w-100" onclick="executarAcao('otimizar_db')">
+              <i class="bi bi-speedometer"></i> Otimizar BD
+            </button>
+          </div>
+          <div class="col-md-3 mb-2">
+            <button class="btn btn-modern w-100" onclick="executarAcao('gerar_relatorio')">
+              <i class="bi bi-file-earmark-pdf"></i> Relatório Completo
+            </button>
+          </div>
+          <div class="col-md-3 mb-2">
+            <button class="btn btn-modern w-100" onclick="executarAcao('exportar_dados')">
+              <i class="bi bi-download"></i> Exportar Dados
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card-modern {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.card-modern:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.card-header-modern {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 16px 20px;
+}
+
+.card-header-modern h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.table-borderless td {
+  border: none;
+  padding: 8px 0;
+  color: var(--text-secondary);
+}
+
+.table-borderless td strong {
+  color: var(--text-primary);
+}
+</style>
+
+<script>
+function executarAcao(acao) {
+  const acoes = {
+    'limpar_cache': {
+      url: '/api/admin/acoes',
+      data: {acao: 'limpar_cache'},
+      mensagem: 'Cache limpo com sucesso!'
+    },
+    'otimizar_db': {
+      url: '/api/admin/acoes',
+      data: {acao: 'otimizar_db'},
+      mensagem: 'Banco de dados otimizado!'
+    },
+    'gerar_relatorio': {
+      url: '/dashboard/export/pdf',
+      data: null,
+      mensagem: 'Relatório gerado!'
+    },
+    'exportar_dados': {
+      url: '/dashboard/export',
+      data: null,
+      mensagem: 'Dados exportados!'
+    }
+  };
+  
+  const config = acoes[acao];
+  if (!config) return;
+  
+  if (config.data) {
+    fetch(config.url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(config.data)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' || res.ok) {
+          alert(config.mensagem);
+        } else {
+          alert('Erro: ' + (data.error || 'Erro desconhecido'));
+        }
+      })
+      .catch(err => {
+        console.error('Erro:', err);
+        alert('Erro ao executar ação');
+      });
+  } else {
+    // Redireciona para URL
+    window.location.href = config.url;
+  }
+}
+</script>
+{% endblock %}
+

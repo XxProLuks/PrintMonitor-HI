@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Admin - Impressoras{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h2><i class="bi bi-printer-fill"></i> Administração de Impressoras</h2>
+      <p class="text-muted mb-0">Cadastre impressoras e defina se são <strong>duplex</strong> (frente e verso) ou <strong>simplex</strong> (apenas frente)</p>
+    </div>
+    <div>
+      <a href="{{ url_for('admin_impressoras', discover='true') }}" class="btn btn-outline-primary">
+        <i class="bi bi-search"></i> Descobrir Impressoras da Rede
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <i class="bi bi-info-circle"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+{% if request.args.get('discover') == 'true' %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  <i class="bi bi-check-circle"></i> <strong>Descoberta de impressoras concluída!</strong> As impressoras encontradas na rede aparecem com o badge <span class="badge bg-info text-white"><i class="bi bi-wifi"></i> Rede</span> abaixo.
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4 border-primary">
+  <div class="card-header bg-primary text-white">
+    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Cadastrar Nova Impressora Manualmente</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3" id="formCadastroManual">
+      <div class="col-md-4">
+        <label for="printer_name" class="form-label">
+          <i class="bi bi-printer"></i> Nome da Impressora <span class="text-danger">*</span>
+        </label>
+        <input type="text" class="form-control" id="printer_name" name="printer_name" 
+               placeholder="Ex: Kyocera ECOSYS M2040dn - KMB8A35C" required>
+        <small class="form-text text-muted">Nome completo da impressora</small>
+      </div>
+      <div class="col-md-3">
+        <label for="ip" class="form-label">
+          <i class="bi bi-router"></i> IP da Impressora
+        </label>
+        <input type="text" class="form-control" id="ip" name="ip" 
+               placeholder="Ex: 192.168.1.100"
+               pattern="^(\d{1,3}\.){3}\d{1,3}$">
+        <small class="form-text text-muted">Endereço IP na rede (opcional)</small>
+      </div>
+      <div class="col-md-2">
+        <label for="sector" class="form-label">
+          <i class="bi bi-building"></i> Setor
+        </label>
+        <input type="text" class="form-control" id="sector" name="sector" 
+               placeholder="Ex: TI, Administração">
+        <small class="form-text text-muted">Setor/localização</small>
+      </div>
+      <div class="col-md-2">
+        <label for="tipo" class="form-label">
+          <i class="bi bi-arrow-repeat"></i> Tipo <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="tipo" name="tipo" required>
+          <option value="simplex" selected>Simplex</option>
+          <option value="duplex">Duplex</option>
+        </select>
+        <small class="form-text text-muted">
+          <i class="bi bi-info-circle"></i> Simplex = 1 página = 1 folha<br>
+          Duplex = 2 páginas = 1 folha
+        </small>
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <button type="submit" name="action" value="add" class="btn btn-primary w-100">
+          <i class="bi bi-plus-circle"></i> Cadastrar
+        </button>
+      </div>
+    </form>
+    <div class="mt-3">
+      <small class="text-muted">
+        <i class="bi bi-lightbulb"></i> <strong>Dica:</strong> Você também pode usar o botão 
+        <a href="{{ url_for('admin_impressoras', discover='true') }}" class="text-decoration-none">
+          <i class="bi bi-search"></i> Descobrir Impressoras da Rede
+        </a> 
+        para encontrar impressoras automaticamente.
+      </small>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Impressoras</h5>
+    <div class="text-muted small">
+      {% if total_cadastradas > 0 %}
+        <span class="badge bg-success">{{ total_cadastradas }} cadastradas</span>
+      {% endif %}
+      {% if total_rede > 0 %}
+        <span class="badge bg-info ms-2">{{ total_rede }} da rede</span>
+      {% endif %}
+      {% if total_eventos > 0 %}
+        <span class="badge bg-secondary ms-2">{{ total_eventos }} dos eventos</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-modern">
+        <thead>
+          <tr>
+            <th><i class="bi bi-printer"></i> Nome da Impressora</th>
+            <th><i class="bi bi-info-circle"></i> Status</th>
+            <th><i class="bi bi-router"></i> IP / Porta</th>
+            <th><i class="bi bi-building"></i> Setor</th>
+            <th><i class="bi bi-arrow-repeat"></i> Tipo</th>
+            <th><i class="bi bi-gear"></i> Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if impressoras %}
+            {% for impressora in impressoras %}
+            <tr class="{% if not impressora.cadastrada %}table-warning{% else %}table-success{% endif %}">
+              <form method="post">
+                <input type="hidden" name="printer_name" value="{{ impressora.printer_name }}">
+                <td>
+                  <strong>{{ impressora.printer_name }}</strong>
+                  {% if impressora.get('location') %}
+                    <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ impressora.location }}</small>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if impressora.cadastrada %}
+                    <span class="badge bg-success text-white" title="Impressora cadastrada no sistema">
+                      <i class="bi bi-check-circle-fill"></i> Cadastrada
+                    </span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark" title="Impressora não cadastrada - precisa ser cadastrada">
+                      <i class="bi bi-exclamation-triangle-fill"></i> Não Cadastrada
+                    </span>
+                  {% endif %}
+                  <br class="d-md-none">
+                  {% if impressora.get('source') == 'rede' %}
+                    <span class="badge bg-info text-white mt-1" title="Descoberta na rede">
+                      <i class="bi bi-wifi"></i> Rede
+                    </span>
+                  {% elif impressora.get('source') == 'eventos' %}
+                    <span class="badge bg-secondary text-white mt-1" title="Encontrada nos eventos">
+                      <i class="bi bi-clock-history"></i> Eventos
+                    </span>
+                  {% elif impressora.cadastrada %}
+                    <span class="badge bg-primary text-white mt-1" title="Cadastrada manualmente">
+                      <i class="bi bi-pencil-square"></i> Manual
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if impressora.get('ip') %}
+                    <span class="badge bg-primary text-white">
+                      <i class="bi bi-router"></i> {{ impressora.ip }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted small">-</span>
+                  {% endif %}
+                  {% if impressora.get('port') and impressora.port != impressora.get('ip', '') %}
+                    <br><small class="text-muted">{{ impressora.port }}</small>
+                  {% endif %}
+                </td>
+                <td>
+                  <input type="text" name="sector" class="form-control form-control-sm" 
+                         value="{{ impressora.sector }}" placeholder="Setor">
+                </td>
+                <td>
+                  <select name="tipo" class="form-select form-select-sm">
+                    <option value="simplex" {% if impressora.tipo == 'simplex' %}selected{% endif %}>
+                      Simplex
+                    </option>
+                    <option value="duplex" {% if impressora.tipo == 'duplex' %}selected{% endif %}>
+                      Duplex
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  {% if impressora.cadastrada %}
+                    <button type="submit" name="action" value="edit" class="btn btn-success btn-sm btn-modern">
+                      <i class="bi bi-check-circle"></i> Atualizar
+                    </button>
+                    <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm btn-modern ms-2" 
+                            onclick="return confirm('Confirma exclusão da impressora {{ impressora.printer_name }}?');">
+                      <i class="bi bi-trash"></i> Excluir
+                    </button>
+                  {% else %}
+                    <button type="submit" name="action" value="add" class="btn btn-primary btn-sm btn-modern">
+                      <i class="bi bi-plus-circle"></i> Cadastrar
+                    </button>
+                  {% endif %}
+                </td>
+              </form>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted">
+                <i class="bi bi-inbox"></i> Nenhuma impressora encontrada
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-info mt-4" role="alert">
+  <h6><i class="bi bi-lightbulb"></i> Como funciona:</h6>
+  <ul class="mb-0">
+    <li><strong><span class="badge bg-success text-white"><i class="bi bi-check-circle-fill"></i> Cadastrada</span>:</strong> Impressora está cadastrada no sistema com tipo (simplex/duplex) definido</li>
+    <li><strong><span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill"></i> Não Cadastrada</span>:</strong> Impressora encontrada mas ainda não cadastrada - precisa ser cadastrada para cálculos corretos</li>
+    <li><strong>Simplex:</strong> Cada página impressa = 1 folha física</li>
+    <li><strong>Duplex:</strong> 2 páginas impressas = 1 folha física (arredondado para cima)</li>
+    <li>Exemplo: 5 páginas duplex = 3 folhas (5÷2 = 2.5, arredondado = 3)</li>
+    <li>Se uma impressora não estiver cadastrada, o sistema assume <strong>simplex</strong> por padrão</li>
+  </ul>
+</div>
+
+{% endblock %}
+

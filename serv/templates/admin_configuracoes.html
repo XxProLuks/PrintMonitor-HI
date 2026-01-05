@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Configurações - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-gear"></i> Configurações do Sistema</h2>
+</div>
+
+{% if message %}
+<div class="alert alert-{{ 'success' if 'sucesso' in message.lower() else 'danger' }} alert-dismissible fade show" role="alert">
+  <i class="bi bi-{{ 'check-circle' if 'sucesso' in message.lower() else 'exclamation-triangle' }}"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-transparent border-0">
+        <h5 class="mb-0"><i class="bi bi-sliders"></i> Configurações de Custo e Alertas</h5>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('admin_configuracoes') }}">
+          <div class="mb-4">
+            <label for="color_multiplier" class="form-label fw-bold">
+              <i class="bi bi-x-circle"></i> Multiplicador de Custo para Impressões Coloridas
+            </label>
+            <input type="number" 
+                   class="form-control form-control-lg" 
+                   id="color_multiplier" 
+                   name="color_multiplier" 
+                   value="{{ configs['color_multiplier'] }}" 
+                   step="0.1" 
+                   min="1.0" 
+                   required>
+            <small class="form-text text-muted">
+              <i class="bi bi-info-circle"></i> Exemplo: 2.0 significa que impressões coloridas custam 2x mais que P&B
+            </small>
+          </div>
+
+          <div class="mb-4">
+            <label for="color_alert_threshold" class="form-label fw-bold">
+              <i class="bi bi-exclamation-triangle"></i> Limite de Alerta para Uso de Cor (%)
+            </label>
+            <input type="number" 
+                   class="form-control form-control-lg" 
+                   id="color_alert_threshold" 
+                   name="color_alert_threshold" 
+                   value="{{ configs['color_alert_threshold'] }}" 
+                   min="0" 
+                   max="100" 
+                   required>
+            <small class="form-text text-muted">
+              <i class="bi bi-info-circle"></i> Alertas serão gerados quando o percentual de páginas coloridas ultrapassar este valor
+            </small>
+          </div>
+
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input type="checkbox" 
+                     class="form-check-input" 
+                     id="color_alert_enabled" 
+                     name="color_alert_enabled" 
+                     value="1"
+                     {% if configs['color_alert_enabled'] %}checked{% endif %}>
+              <label class="form-check-label fw-bold" for="color_alert_enabled">
+                <i class="bi bi-bell"></i> Habilitar Alertas de Uso de Cor
+              </label>
+            </div>
+            <small class="form-text text-muted d-block mt-2">
+              <i class="bi bi-info-circle"></i> Quando habilitado, o sistema monitora e alerta sobre uso excessivo de impressões coloridas
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-modern btn-lg">
+            <i class="bi bi-save"></i> Salvar Configurações
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-transparent border-0">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informações Atuais</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <p class="mb-1 text-muted">Multiplicador Atual</p>
+          <h4 class="text-primary">{{ configs['color_multiplier'] }}x</h4>
+        </div>
+        <hr>
+        <div class="mb-3">
+          <p class="mb-1 text-muted">Limite de Alerta</p>
+          <h4 class="text-warning">{{ configs['color_alert_threshold'] }}%</h4>
+        </div>
+        <hr>
+        <div class="mb-3">
+          <p class="mb-1 text-muted">Status dos Alertas</p>
+          <h4>
+            {% if configs['color_alert_enabled'] %}
+              <span class="badge bg-success badge-modern">Habilitados</span>
+            {% else %}
+              <span class="badge bg-secondary badge-modern">Desabilitados</span>
+            {% endif %}
+          </h4>
+        </div>
+        <hr>
+        <p class="text-muted small mb-0">
+          <i class="bi bi-lightbulb"></i> As configurações são aplicadas imediatamente aos cálculos de custo e aos alertas do sistema.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

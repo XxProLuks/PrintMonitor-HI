@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Usuários - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-person-lines-fill"></i> Usuários</h2>
+</div>
+
+<div class="filter-card">
+  <form class="row g-3" method="get" action="{{ url_for('all_users') }}">
+    <div class="col-md-3">
+      <label for="start_date" class="form-label"><i class="bi bi-calendar-event"></i> Data Início</label>
+      <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+    </div>
+    <div class="col-md-3">
+      <label for="end_date" class="form-label"><i class="bi bi-calendar-event-fill"></i> Data Fim</label>
+      <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+    </div>
+    <div class="col-md-4">
+      <label for="filtro_usuario" class="form-label"><i class="bi bi-search"></i> Filtro Usuário</label>
+      <input type="text" id="filtro_usuario" name="filtro_usuario" class="form-control" placeholder="Digite o nome do usuário..." value="{{ filtro_usuario }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary btn-modern w-100">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-12">
+      <a href="{{ url_for('export_usuarios_excel', start_date=start_date, end_date=end_date, filtro_usuario=filtro_usuario) }}" 
+         class="btn btn-success btn-modern">
+        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+      </a>
+    </div>
+  </form>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-modern">
+    <thead>
+      <tr>
+        <th><i class="bi bi-person"></i> Usuário</th>
+        <th><i class="bi bi-pc-display"></i> Máquina</th>
+        <th><i class="bi bi-printer"></i> Total Impressões</th>
+        <th><i class="bi bi-file-text"></i> Total Páginas</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user, machine, total_imp, total_pag in data %}
+      <tr>
+        <td><strong>{{ user }}</strong></td>
+        <td><span class="badge bg-secondary badge-modern">{{ machine }}</span></td>
+        <td><span class="badge bg-primary badge-modern">{{ total_imp }}</span></td>
+        <td><span class="badge bg-info badge-modern">{{ total_pag }}</span></td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="4" class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="text-muted mt-3">Nenhum registro encontrado.</p>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Paginação -->
+{% if total_pages and total_pages > 1 %}
+<nav aria-label="Paginação">
+  <ul class="pagination justify-content-center mt-4">
+    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page - 1 }}&start_date={{ start_date }}&end_date={{ end_date }}&filtro_usuario={{ filtro_usuario }}&per_page={{ per_page }}" 
+         style="background: var(--card-bg); border-color: var(--border-primary); color: var(--text-primary);">
+        <i class="bi bi-chevron-left"></i> Anterior
+      </a>
+    </li>
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <li class="page-item active">
+          <span class="page-link" style="background: var(--sidebar-active); border-color: var(--sidebar-active);">
+            {{ p }}
+          </span>
+        </li>
+      {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ p }}&start_date={{ start_date }}&end_date={{ end_date }}&filtro_usuario={{ filtro_usuario }}&per_page={{ per_page }}"
+             style="background: var(--card-bg); border-color: var(--border-primary); color: var(--text-primary);">
+            {{ p }}
+          </a>
+        </li>
+      {% elif p == 4 or p == total_pages - 3 %}
+        <li class="page-item disabled">
+          <span class="page-link" style="background: var(--card-bg); border-color: var(--border-primary); color: var(--text-muted);">
+            ...
+          </span>
+        </li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+      <a class="page-link" href="?page={{ page + 1 }}&start_date={{ start_date }}&end_date={{ end_date }}&filtro_usuario={{ filtro_usuario }}&per_page={{ per_page }}"
+         style="background: var(--card-bg); border-color: var(--border-primary); color: var(--text-primary);">
+        Próxima <i class="bi bi-chevron-right"></i>
+      </a>
+    </li>
+  </ul>
+  <div class="text-center text-muted mt-2">
+    Mostrando {{ ((page - 1) * per_page) + 1 }} - {{ [page * per_page, total_items]|min }} de {{ total_items }} registros
+  </div>
+</nav>
+{% endif %}
+{% endblock %}

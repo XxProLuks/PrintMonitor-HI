@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "post login with valid and invalid credentials",
+    "description": "Test the /login POST endpoint to verify successful login with valid credentials and proper error response with invalid credentials."
+  },
+  {
+    "id": "TC002",
+    "title": "get dashboard page rendering",
+    "description": "Test the /dashboard GET endpoint to ensure the dashboard page is rendered correctly with all necessary components."
+  },
+  {
+    "id": "TC003",
+    "title": "get system statistics json response",
+    "description": "Test the /api/v1/stats GET endpoint to verify it returns correct and consistent system statistics in JSON format."
+  },
+  {
+    "id": "TC004",
+    "title": "post create new print event",
+    "description": "Test the /api/print_events POST endpoint to create a new print event with valid data and verify it is stored correctly."
+  },
+  {
+    "id": "TC005",
+    "title": "get list print events with filters and pagination",
+    "description": "Test the /api/v1/events GET endpoint to retrieve a list of print events filtered by date, user, printer, and support pagination with limit and offset."
+  },
+  {
+    "id": "TC006",
+    "title": "get list users page rendering",
+    "description": "Test the /usuarios GET endpoint to ensure the users list page is rendered correctly with user statistics."
+  },
+  {
+    "id": "TC007",
+    "title": "post create or update user",
+    "description": "Test the /admin/usuarios POST endpoint to create a new user or update an existing user with valid data."
+  },
+  {
+    "id": "TC008",
+    "title": "get export users report excel",
+    "description": "Test the /usuarios/export GET endpoint to verify the export of users report in Excel format."
+  },
+  {
+    "id": "TC009",
+    "title": "post update printer sector",
+    "description": "Test the /impressoras/update_sector POST endpoint to update the sector of a printer with valid printer name and sector data."
+  },
+  {
+    "id": "TC010",
+    "title": "get list quotas",
+    "description": "Test the /api/quotas GET endpoint to retrieve the list of quotas and verify the data correctness."
+  }
+]

@@ -1,0 +1,2873 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "Print Monitor" }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  {% block head %}{% endblock %}
+
+  <style>
+    :root {
+      /* Tema Hospitalar - Cores Neutras (Dark Mode) */
+      --bg-primary: #1a1f2e;
+      --bg-secondary: #252b3d;
+      --bg-tertiary: #2f3649;
+      --text-primary: #e8eaed;
+      --text-secondary: #b0b8c4;
+      --text-muted: #8a9199;
+      --border-primary: #3d4558;
+      --border-secondary: #2f3649;
+      --link-color: #5b9bd5;
+      --link-hover: #7ab3e8;
+      --accent-blue: #4a90e2;
+      --accent-green: #6bbf8f;
+      --accent-red: #e57373;
+      --accent-yellow: #ffb74d;
+      --accent-purple: #9575cd;
+      
+      /* Sidebar */
+      --sidebar-bg: #252b3d;
+      --sidebar-hover: #2f3649;
+      --sidebar-active: #4a90e2;
+      
+      /* Cards */
+      --card-bg: #252b3d;
+      --card-border: #3d4558;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      
+      /* Inputs */
+      --input-bg: #1a1f2e;
+      --input-border: #3d4558;
+      --input-focus: #4a90e2;
+      
+      /* Buttons */
+      --btn-primary: #4a90e2;
+      --btn-primary-hover: #5b9bd5;
+      --btn-secondary: #2f3649;
+      --btn-secondary-hover: #3d4558;
+      
+      /* Stats Cards */
+      --stat-primary: #4a90e2;
+      --stat-secondary: #6bbf8f;
+      --stat-success: #6bbf8f;
+      --stat-warning: #ffb74d;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 0 rgba(27, 31, 36, 0.12);
+      --shadow-md: 0 3px 6px rgba(27, 31, 36, 0.15);
+      --shadow-lg: 0 8px 24px rgba(27, 31, 36, 0.2);
+      
+      /* Spacing */
+      --gap: 16px;
+      --border-radius: 6px;
+      --border-radius-lg: 12px;
+    }
+    
+    /* Light Mode Theme - Hospitalar */
+    body.light-mode {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f7fa;
+      --bg-tertiary: #eef2f5;
+      --text-primary: #2c3e50;
+      --text-secondary: #5a6c7d;
+      --text-muted: #8b9aab;
+      --border-primary: #d1d9e0;
+      --border-secondary: #e5e9ed;
+      --link-color: #4a90e2;
+      --link-hover: #357abd;
+      --accent-blue: #4a90e2;
+      --accent-green: #6bbf8f;
+      --accent-red: #e57373;
+      --accent-yellow: #ffb74d;
+      --accent-purple: #9575cd;
+      
+      /* Sidebar Light */
+      --sidebar-bg: #f5f7fa;
+      --sidebar-hover: #eef2f5;
+      --sidebar-active: #4a90e2;
+      
+      /* Cards Light */
+      --card-bg: #ffffff;
+      --card-border: #d0d7de;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.12);
+      
+      /* Inputs Light */
+      --input-bg: #ffffff;
+      --input-border: #d0d7de;
+      --input-focus: #0969da;
+      
+      /* Buttons Light */
+      --btn-primary: #1a7f37;
+      --btn-primary-hover: #2da44e;
+      --btn-secondary: #f6f8fa;
+      --btn-secondary-hover: #eaeef2;
+      
+      /* Shadows Light */
+      --shadow-sm: 0 1px 0 rgba(27, 31, 36, 0.04);
+      --shadow-md: 0 3px 6px rgba(27, 31, 36, 0.08);
+      --shadow-lg: 0 8px 24px rgba(27, 31, 36, 0.12);
+    }
+
+    /* ===== Reset básico ===== */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    a {
+      color: var(--link-color);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    a:hover {
+      color: var(--link-hover);
+      text-decoration: underline;
+    }
+
+    /* Sidebar - GitHub Style com Animações */
+    .sidebar {
+      width: 280px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid var(--border-primary);
+      padding: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 1040;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header {
+      padding: 16px 16px;
+      border-bottom: 1px solid var(--border-primary);
+      background: linear-gradient(135deg, var(--sidebar-bg), var(--bg-secondary));
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    
+    .sidebar-content {
+      flex: 1;
+      padding: 8px 8px;
+      overflow-y: auto;
+    }
+    
+    .sidebar-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border-primary);
+      background: var(--sidebar-bg);
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+    
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--stat-primary), var(--stat-secondary));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .sidebar:hover::before {
+      opacity: 0.3;
+    }
+    
+    .sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-primary);
+      border-radius: 4px;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+    
+    .sidebar .nav-link {
+      color: var(--text-primary);
+      padding: 8px 14px;
+      margin: 2px 0;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+      min-height: 38px;
+    }
+    
+    .sidebar .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--sidebar-active);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.2s ease;
+    }
+    
+    .sidebar .nav-link:hover::before,
+    .sidebar .nav-link.active::before {
+      transform: scaleY(1);
+    }
+    
+    .sidebar .nav-link i {
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+      transition: transform 0.2s ease;
+    }
+    
+    .sidebar .nav-link:hover i {
+      transform: scale(1.1);
+    }
+    
+    .sidebar .nav-link:hover {
+      background-color: var(--sidebar-hover);
+      color: var(--text-primary);
+      text-decoration: none;
+      border-color: var(--border-primary);
+      transform: translateX(4px);
+    }
+    
+    .sidebar .nav-link.active {
+      background-color: var(--sidebar-active);
+      color: #fff;
+      text-decoration: none;
+      border-color: var(--sidebar-active);
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(31, 111, 235, 0.3);
+    }
+    
+    .sidebar .nav-link.active i {
+      transform: scale(1.15);
+    }
+    
+    /* Separadores de seção no sidebar */
+    .sidebar-section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-primary), transparent);
+      margin: 8px 12px;
+      opacity: 0.4;
+    }
+    
+    .sidebar-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 8px 16px 4px;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      opacity: 0.7;
+    }
+    
+    .sidebar .nav-item > div {
+      margin-top: 4px;
+      margin-bottom: 2px;
+      padding: 6px 12px;
+      border-radius: var(--border-radius);
+      transition: all 0.2s ease;
+    }
+    
+    .sidebar .nav-item > div:hover {
+      background-color: var(--sidebar-hover);
+    }
+    
+    /* Agrupamento visual melhorado */
+    .sidebar .nav-menu > li:first-child {
+      margin-top: 0;
+    }
+    
+    .sidebar .nav-menu > li:last-child {
+      margin-bottom: 0;
+    }
+    
+    /* Agrupa itens relacionados visualmente */
+    .sidebar .menu-item + .menu-item {
+      margin-top: 0;
+    }
+    
+    .sidebar .nav-item + .nav-item {
+      margin-top: 0;
+    }
+    
+    /* Melhor espaçamento entre seções */
+    .sidebar-section-title + .menu-item,
+    .sidebar-section-title + .nav-item {
+      margin-top: 0;
+    }
+    
+    .sidebar-section-divider + .sidebar-section-title {
+      margin-top: 0;
+    }
+    
+    /* Menu com submenu */
+    .sidebar .nav-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .sidebar .menu-item {
+      margin-bottom: 0.15rem;
+    }
+    
+    .sidebar .menu-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 8px 14px;
+      color: var(--text-primary);
+      text-decoration: none;
+      border-radius: var(--border-radius);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      min-height: 38px;
+      margin: 2px 0;
+    }
+    
+    .sidebar .menu-toggle:hover {
+      background-color: var(--sidebar-hover);
+      color: var(--text-primary);
+    }
+    
+    .sidebar .menu-toggle span {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .sidebar .menu-toggle span i:first-child {
+      width: 20px;
+      text-align: center;
+    }
+    
+    .sidebar .menu-toggle .bi-chevron-down {
+      margin-left: auto;
+      transition: transform 0.3s ease;
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+    
+    .sidebar .menu-toggle.expanded .bi-chevron-down {
+      transform: rotate(180deg);
+    }
+    
+    .sidebar .submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+    
+    .sidebar .submenu.expanded {
+      max-height: 1000px;
+      padding: 0.15rem 0 0.25rem 0;
+    }
+    
+    .sidebar .submenu .nav-link {
+      padding-left: 2.75rem;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      font-size: 0.875rem;
+      position: relative;
+      min-height: 34px;
+      margin: 1px 0;
+    }
+    
+    .sidebar .submenu .nav-link::before {
+      left: 2.5rem;
+    }
+    
+    .sidebar .submenu .nav-link i {
+      font-size: 0.875rem;
+    }
+    
+    /* Submenu dentro de submenu (nível 2) */
+    .sidebar .submenu .submenu .nav-link {
+      padding-left: 4rem;
+    }
+    
+    .sidebar .submenu .submenu .nav-link::before {
+      left: 3.75rem;
+    }
+    
+    /* Indicador de item ativo no submenu */
+    .sidebar .menu-item.has-active .menu-toggle {
+      background-color: var(--sidebar-hover);
+      color: var(--sidebar-active);
+    }
+    
+    .sidebar .menu-item.has-active .menu-toggle i {
+      color: var(--sidebar-active);
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 280px;
+      padding: 24px 32px;
+      min-height: 100vh;
+      background-color: var(--bg-primary);
+      transition: all 0.2s ease;
+    }
+
+    /* Page header - GitHub Style */
+    .page-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .page-header h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .page-header p {
+      color: var(--text-secondary);
+      margin: 8px 0 0 0;
+      font-size: 14px;
+    }
+
+    /* Stat Cards - GitHub Style com Animações */
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--border-radius-lg);
+      padding: 20px;
+      color: var(--text-primary);
+      box-shadow: var(--card-shadow);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--stat-primary);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-secondary);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-5px) scale(1.02);
+    }
+    
+    .stat-card h3 {
+      transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover h3 {
+      transform: scale(1.05);
+    }
+
+    .stat-card h5 {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card h3 {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
+      color: var(--text-primary);
+    }
+
+    .stat-card.secondary::before {
+      background: var(--stat-secondary);
+    }
+
+    .stat-card.success::before {
+      background: var(--stat-success);
+    }
+
+    .stat-card.warning::before {
+      background: var(--stat-warning);
+    }
+    
+    /* Top Header Melhorado */
+    .top-header {
+      background: var(--card-bg);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--border-radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Métricas em Tempo Real */
+    .realtime-metrics {
+      padding: 8px 0;
+    }
+    
+    .metric-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    
+    .metric-badge:hover {
+      background: var(--sidebar-hover);
+      border-color: var(--sidebar-active);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .metric-badge i {
+      color: var(--accent-blue);
+      font-size: 14px;
+    }
+    
+    .metric-value {
+      font-weight: 700;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    /* Menu de Favoritos */
+    .favorites-menu {
+      min-width: 250px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .favorite-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: background 0.2s;
+    }
+    
+    .favorite-item:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .favorite-item i {
+      color: var(--accent-yellow);
+      width: 20px;
+    }
+    
+    /* Menu de Notificações */
+    .notifications-menu {
+      background: var(--card-bg);
+      border: 1px solid var(--border-primary);
+    }
+    
+    .notification-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border-primary);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .notification-item:hover {
+      background: var(--bg-secondary);
+    }
+    
+    .notification-item.unread {
+      background: var(--bg-secondary);
+      border-left: 3px solid var(--accent-blue);
+    }
+    
+    .notification-item.read {
+      opacity: 0.7;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .notification-message {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    
+    .notification-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    .notification-level {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    
+    .notification-level.info {
+      background: rgba(74, 144, 226, 0.2);
+      color: var(--accent-blue);
+    }
+    
+    .notification-level.warning {
+      background: rgba(255, 183, 77, 0.2);
+      color: var(--accent-yellow);
+    }
+    
+    .notification-level.error {
+      background: rgba(229, 115, 115, 0.2);
+      color: var(--accent-red);
+    }
+    
+    .notification-level.success {
+      background: rgba(107, 191, 143, 0.2);
+      color: var(--accent-green);
+    }
+    
+    /* Animações de Loading */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* Badge de Notificação Pulsante */
+    @keyframes pulse-badge {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+    
+    #notificationBadge:not([style*="display: none"]) {
+      animation: pulse-badge 2s ease-in-out infinite;
+    }
+
+    /* Tables - GitHub Style com Animações */
+    .table-modern {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .table-modern thead {
+      background: var(--bg-secondary);
+      position: relative;
+    }
+    
+    .table-modern thead::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--stat-primary), var(--stat-secondary));
+      transform: scaleX(0);
+      animation: slideIn 0.6s ease-out 0.3s forwards;
+    }
+    
+    @keyframes slideIn {
+      to { transform: scaleX(1); }
+    }
+
+    .table-modern thead th {
+      border: none;
+      border-bottom: 1px solid var(--border-primary);
+      padding: 12px 16px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      text-align: left;
+      transition: color 0.2s ease;
+    }
+    
+    .table-modern thead:hover th {
+      color: var(--text-primary);
+    }
+
+    .table-modern tbody tr {
+      transition: all 0.2s ease;
+      border-bottom: 1px solid var(--border-primary);
+      opacity: 0;
+      animation: slideInRow 0.4s ease-out forwards;
+    }
+    
+    @keyframes slideInRow {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .table-modern tbody tr:nth-child(1) { animation-delay: 0.05s; }
+    .table-modern tbody tr:nth-child(2) { animation-delay: 0.1s; }
+    .table-modern tbody tr:nth-child(3) { animation-delay: 0.15s; }
+    .table-modern tbody tr:nth-child(4) { animation-delay: 0.2s; }
+    .table-modern tbody tr:nth-child(5) { animation-delay: 0.25s; }
+
+    .table-modern tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .table-modern tbody tr:hover {
+      background-color: var(--bg-tertiary);
+      transform: scale(1.01);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .table-modern tbody td {
+      padding: 12px 16px;
+      border-top: none;
+      vertical-align: middle;
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+    
+    .table-modern tbody tr:hover td {
+      color: var(--text-primary);
+    }
+
+    /* Badges modernos com animações */
+    .badge-modern {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .badge-modern:hover {
+      transform: scale(1.1);
+    }
+
+    /* Form Cards - GitHub Style */
+    .filter-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .filter-card .form-label {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .filter-card .form-control,
+    .filter-card .form-select {
+      border: 1px solid var(--input-border);
+      border-radius: var(--border-radius);
+      padding: 8px 12px;
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    .filter-card .form-control:focus,
+    .filter-card .form-select:focus {
+      border-color: var(--input-focus);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+    }
+
+    .filter-card .form-control::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Buttons - GitHub Style com Animações */
+    .btn-modern,
+    .btn {
+      border-radius: var(--border-radius);
+      padding: 6px 16px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .btn-primary,
+    .btn-success {
+      background-color: var(--btn-primary);
+      border-color: var(--btn-primary);
+      color: #fff;
+    }
+    
+    .btn-primary:hover,
+    .btn-success:hover {
+      background-color: var(--btn-primary-hover);
+      border-color: var(--btn-primary-hover);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+    }
+    
+    .btn-secondary {
+      background-color: var(--btn-secondary);
+      border-color: var(--border-primary);
+      color: var(--text-primary);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--btn-secondary-hover);
+      border-color: var(--border-secondary);
+      color: var(--text-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-modern:active {
+      transform: translateY(0);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .page-header h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Toast container melhorado */
+    .toast-container {
+      z-index: 9999;
+    }
+    
+    .toast {
+      animation: slideInRight 0.3s ease-out;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-primary);
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .toast.showing {
+      animation: slideInRight 0.3s ease-out;
+    }
+    
+    .toast.hiding {
+      animation: slideOutRight 0.3s ease-in forwards;
+    }
+    
+    @keyframes slideOutRight {
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    /* Modal - GitHub Style */
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+    }
+    
+    .modal-header {
+      border-bottom: 1px solid var(--border-primary);
+    }
+    
+    .modal-footer {
+      border-top: 1px solid var(--border-primary);
+    }
+    
+    /* Modal de Busca Melhorado - Design Moderno */
+    .search-modal-content {
+      border-radius: 16px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      border: none;
+      backdrop-filter: blur(10px);
+    }
+    
+    .search-modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      border: none;
+      padding: 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .search-modal-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 50%, rgba(240, 147, 251, 0.9) 100%);
+      opacity: 0.95;
+    }
+    
+    .search-modal-header > * {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .search-icon-wrapper {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      margin-right: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+    
+    .search-icon-wrapper:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.05);
+    }
+    
+    .search-icon-wrapper i {
+      font-size: 22px;
+      color: white;
+    }
+    
+    .search-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.98);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 17px;
+      color: var(--text-primary);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+    }
+    
+    .search-input:focus {
+      background: white;
+      box-shadow: 0 6px 24px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
+      outline: none;
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    
+    .search-shortcuts {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    
+    .shortcut-key {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .shortcut-key:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+    
+    .shortcut-plus {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      margin: 0 3px;
+      font-weight: 600;
+    }
+    
+    .search-modal-body {
+      min-height: 450px;
+      max-height: 600px;
+      background: var(--bg-primary);
+    }
+    
+    .search-results-container {
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 20px;
+      scroll-behavior: smooth;
+    }
+    
+    .search-results-container::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    .search-results-container::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+    }
+    
+    .search-results-container::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--sidebar-active), var(--accent-blue));
+      border-radius: 10px;
+      border: 2px solid var(--bg-secondary);
+    }
+    
+    .search-results-container::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, var(--accent-blue), var(--sidebar-active));
+    }
+    
+    .search-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+    
+    .empty-state-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, var(--sidebar-active), var(--accent-blue));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4); }
+    }
+    
+    .empty-state-icon i {
+      font-size: 42px;
+      color: white;
+    }
+    
+    .empty-state-text {
+      color: var(--text-primary);
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+    
+    .search-suggestions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .suggestion-tag {
+      background: linear-gradient(135deg, var(--bg-secondary), var(--card-bg));
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 2px solid var(--border-primary);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .suggestion-tag:hover {
+      background: linear-gradient(135deg, var(--sidebar-active), var(--accent-blue));
+      color: white;
+      border-color: var(--sidebar-active);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .search-result-category {
+      margin-bottom: 24px;
+    }
+    
+    .search-category-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      display: inline-block;
+      border-left: 3px solid var(--sidebar-active);
+    }
+    
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      margin-bottom: 8px;
+      background: var(--card-bg);
+      border: 2px solid var(--border-primary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .search-result-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--sidebar-active), var(--accent-blue));
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .search-result-item:hover {
+      background: var(--bg-secondary);
+      border-color: var(--sidebar-active);
+      transform: translateX(6px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+    }
+    
+    .search-result-item:hover::before {
+      transform: scaleY(1);
+    }
+    
+    .search-result-item.active {
+      background: linear-gradient(135deg, var(--sidebar-active), var(--accent-blue));
+      border-color: var(--sidebar-active);
+      color: white;
+      transform: translateX(6px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+    
+    .search-result-item.active::before {
+      transform: scaleY(1);
+      background: white;
+    }
+    
+    .search-result-item.active .result-icon {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .search-result-item.active .result-title {
+      color: white;
+    }
+    
+    .search-result-item.active .result-description {
+      color: rgba(255, 255, 255, 0.95);
+    }
+    
+    .search-result-item.active .result-badge {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .result-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--card-bg));
+      border-radius: 12px;
+      margin-right: 16px;
+      flex-shrink: 0;
+      color: var(--sidebar-active);
+      font-size: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-result-item:hover .result-icon {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .result-content {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .result-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.3px;
+    }
+    
+    .result-title mark {
+      background: linear-gradient(135deg, #ffd700, #ffed4e);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-weight: 800;
+      color: #333;
+      box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+    }
+    
+    .result-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+    
+    .result-badge {
+      background: linear-gradient(135deg, var(--bg-secondary), var(--card-bg));
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 16px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid var(--border-primary);
+      transition: all 0.3s ease;
+    }
+    
+    .search-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+    
+    .search-loading i {
+      font-size: 40px;
+      background: linear-gradient(135deg, var(--sidebar-active), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .search-no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+    
+    .search-no-results i {
+      font-size: 56px;
+      background: linear-gradient(135deg, var(--text-muted), var(--text-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+    }
+    
+    .search-modal-footer {
+      background: linear-gradient(180deg, var(--bg-secondary), var(--bg-primary));
+      border-top: 2px solid var(--border-primary);
+      padding: 16px 28px;
+    }
+    
+    .search-footer-hints {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .hint-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    .hint-item kbd {
+      background: var(--card-bg);
+      border: 2px solid var(--border-primary);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .hint-item kbd:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .search-footer-info {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 6px 12px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-primary);
+    }
+    
+    /* Botão de Busca Moderno no Header */
+    .btn-search-modern {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-search-modern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .btn-search-modern:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-search-modern:hover::before {
+      left: 100%;
+    }
+    
+    .btn-search-modern:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-search-modern i {
+      font-size: 16px;
+    }
+    
+    .search-btn-text {
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Inputs globais */
+    input, textarea, select {
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--input-border);
+      transition: all 0.15s ease;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--input-focus);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    /* Loading Skeleton */
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 0%,
+        var(--bg-tertiary) 50%,
+        var(--bg-secondary) 100%
+      );
+      background-size: 200% 100%;
+      animation: loading 1.5s ease-in-out infinite;
+      border-radius: var(--border-radius);
+    }
+    
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    .skeleton-text {
+      height: 1em;
+      margin: 0.5em 0;
+    }
+    
+    .skeleton-title {
+      height: 1.5em;
+      width: 60%;
+      margin-bottom: 1em;
+    }
+    
+    /* Pulse animation para elementos importantes */
+    .pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.7;
+      }
+    }
+    
+    /* Shake animation para erros */
+    .shake {
+      animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    
+    @keyframes shake {
+      10%, 90% { transform: translateX(-2px); }
+      20%, 80% { transform: translateX(4px); }
+      30%, 50%, 70% { transform: translateX(-4px); }
+      40%, 60% { transform: translateX(4px); }
+    }
+    
+    /* Ripple effect para botões */
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .ripple-effect {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-animation 0.6s ease-out;
+      pointer-events: none;
+    }
+    
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+    
+    .btn {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Tooltip customizado */
+    .tooltip-custom {
+      position: relative;
+      cursor: help;
+    }
+    
+    .tooltip-custom::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--border-radius);
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 1000;
+    }
+    
+    .tooltip-custom:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-12px);
+    }
+    
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* Spinner customizado */
+    .spinner-border-sm {
+      width: 1rem;
+      height: 1rem;
+      border-width: 0.15em;
+    }
+    
+    /* Efeito de glow em elementos importantes */
+    .glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 5px var(--stat-primary), 0 0 10px var(--stat-primary), 0 0 15px var(--stat-primary);
+      }
+      to {
+        box-shadow: 0 0 10px var(--stat-primary), 0 0 20px var(--stat-primary), 0 0 30px var(--stat-primary);
+      }
+    }
+    
+    /* Efeito de shimmer */
+    .shimmer {
+      background: linear-gradient(
+        90deg,
+        var(--bg-secondary) 0%,
+        var(--bg-tertiary) 50%,
+        var(--bg-secondary) 100%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    /* Efeito de bounce para elementos importantes */
+    .bounce {
+      animation: bounce 1s ease infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* Efeito de zoom suave */
+    .zoom-on-hover {
+      transition: transform 0.3s ease;
+    }
+    
+    .zoom-on-hover:hover {
+      transform: scale(1.05);
+    }
+    
+    /* Efeito de fade in para elementos */
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    
+    /* Efeito de slide in da esquerda */
+    .slide-in-left {
+      opacity: 0;
+      transform: translateX(-30px);
+      animation: slideInLeft 0.6s ease-out forwards;
+    }
+    
+    /* Efeito de slide in da direita */
+    .slide-in-right {
+      opacity: 0;
+      transform: translateX(30px);
+      animation: slideInRight 0.6s ease-out forwards;
+    }
+    
+    /* Efeito de scale in */
+    .scale-in {
+      opacity: 0;
+      transform: scale(0.8);
+      animation: scaleIn 0.5s ease-out forwards;
+    }
+    
+    @keyframes scaleIn {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    /* Prefers reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* Efeito de gradiente animado no background */
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-animated {
+      background: linear-gradient(-45deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary), var(--bg-primary));
+      background-size: 400% 400%;
+      animation: gradient-shift 15s ease infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <!-- Header do Sidebar -->
+    <div class="sidebar-header">
+      <a class="navbar-brand fs-4 fw-bold d-flex align-items-center gap-2" href="{{ url_for('home') }}" style="color: var(--text-primary); text-decoration: none;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--sidebar-active), var(--accent-blue)); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);">
+          <i class="bi bi-printer-fill" style="color: white; font-size: 20px;"></i>
+        </div>
+        <div>
+          <div style="font-size: 18px; line-height: 1.2;">Print Monitor</div>
+          <div style="font-size: 10px; color: var(--text-muted); font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">Sistema de Gestão</div>
+        </div>
+      </a>
+    </div>
+    
+    <!-- Conteúdo do Sidebar -->
+    <div class="sidebar-content">
+      <ul class="nav-menu">
+        <!-- VISÃO GERAL -->
+        <div class="sidebar-section-title">Visão Geral</div>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+          </a>
+        </li>
+        <div class="sidebar-section-divider"></div>
+        
+        <!-- RELATÓRIOS -->
+        <div class="sidebar-section-title">Relatórios</div>
+        <li class="menu-item {% if request.endpoint in ['all_users', 'painel_setores', 'impressoras'] %}has-active{% endif %}">
+          <button class="menu-toggle {% if request.endpoint in ['all_users', 'painel_setores', 'impressoras'] %}expanded{% endif %}" data-menu="relatorios">
+            <span>
+              <i class="bi bi-file-earmark-text"></i> <span>Relatórios</span>
+            </span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <ul class="submenu {% if request.endpoint in ['all_users', 'painel_setores', 'impressoras'] %}expanded{% endif %}">
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'all_users' %}active{% endif %}" href="{{ url_for('all_users') }}">
+                <i class="bi bi-people"></i> <span>Usuários</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'painel_setores' %}active{% endif %}" href="{{ url_for('painel_setores') }}">
+                <i class="bi bi-building"></i> <span>Setores</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'impressoras' %}active{% endif %}" href="{{ url_for('impressoras') }}">
+                <i class="bi bi-printer"></i> <span>Impressoras</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        
+        <div class="sidebar-section-divider"></div>
+        
+        <!-- ANÁLISES E INSIGHTS -->
+        <div class="sidebar-section-title">Análises & Insights</div>
+        <li class="menu-item {% if request.endpoint in ['pagina_comparativo', 'pagina_alertas', 'pagina_sugestoes', 'pagina_filtros', 'pagina_heatmaps', 'pagina_gamificacao', 'pagina_comentarios'] %}has-active{% endif %}">
+          <button class="menu-toggle {% if request.endpoint in ['pagina_comparativo', 'pagina_alertas', 'pagina_sugestoes', 'pagina_filtros', 'pagina_heatmaps', 'pagina_gamificacao', 'pagina_comentarios'] %}expanded{% endif %}" data-menu="analises">
+            <span>
+              <i class="bi bi-graph-up-arrow"></i> <span>Análises</span>
+            </span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <ul class="submenu {% if request.endpoint in ['pagina_comparativo', 'pagina_alertas', 'pagina_sugestoes', 'pagina_filtros', 'pagina_heatmaps', 'pagina_gamificacao', 'pagina_comentarios'] %}expanded{% endif %}">
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_comparativo' %}active{% endif %}" href="{{ url_for('pagina_comparativo') }}">
+                <i class="bi bi-arrow-left-right"></i> <span>Comparativo</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_alertas' %}active{% endif %}" href="{{ url_for('pagina_alertas') }}">
+                <i class="bi bi-bell"></i> <span>Alertas</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_sugestoes' %}active{% endif %}" href="{{ url_for('pagina_sugestoes') }}">
+                <i class="bi bi-lightbulb"></i> <span>Sugestões</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_filtros' %}active{% endif %}" href="{{ url_for('pagina_filtros') }}">
+                <i class="bi bi-bookmark-star"></i> <span>Filtros Salvos</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_heatmaps' %}active{% endif %}" href="{{ url_for('pagina_heatmaps') }}">
+                <i class="bi bi-grid-3x3-gap"></i> <span>Heatmaps</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_gamificacao' %}active{% endif %}" href="{{ url_for('pagina_gamificacao') }}">
+                <i class="bi bi-trophy"></i> <span>Gamificação</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'pagina_comentarios' %}active{% endif %}" href="{{ url_for('pagina_comentarios') }}">
+                <i class="bi bi-chat-dots"></i> <span>Comentários</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        
+        <div class="sidebar-section-divider"></div>
+        
+        <!-- FERRAMENTAS -->
+        <div class="sidebar-section-title">Ferramentas</div>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'pagina_widgets' %}active{% endif %}" href="{{ url_for('pagina_widgets') }}">
+            <i class="bi bi-grid-3x3-gap-fill"></i> <span>Widgets Personalizados</span>
+          </a>
+        </li>
+      
+        <!-- ADMINISTRAÇÃO -->
+        {% if session.get('is_admin') %}
+        <div class="sidebar-section-divider"></div>
+        <div class="sidebar-section-title">Administração</div>
+        <li class="menu-item {% if request.endpoint in ['admin_painel', 'admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras', 'admin_quotas', 'admin_metas', 'status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}has-active{% endif %}">
+          <button class="menu-toggle {% if request.endpoint in ['admin_painel', 'admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras', 'admin_quotas', 'admin_metas', 'status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}expanded{% endif %}" data-menu="administracao">
+            <span>
+              <i class="bi bi-shield-lock"></i> <span>Administração</span>
+            </span>
+            <i class="bi bi-chevron-down"></i>
+          </button>
+          <ul class="submenu {% if request.endpoint in ['admin_painel', 'admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras', 'admin_quotas', 'admin_metas', 'status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}expanded{% endif %}">
+            <li class="nav-item">
+              <a class="nav-link {% if request.endpoint == 'admin_painel' %}active{% endif %}" href="{{ url_for('admin_painel') }}">
+                <i class="bi bi-speedometer2"></i> <span>Painel Administrativo</span>
+              </a>
+            </li>
+            <!-- Configurações -->
+            <li class="menu-item {% if request.endpoint in ['admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras'] %}has-active{% endif %}">
+              <button class="menu-toggle {% if request.endpoint in ['admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras'] %}expanded{% endif %}" data-menu="configuracoes">
+                <span>
+                  <i class="bi bi-gear"></i> <span>Configurações</span>
+                </span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <ul class="submenu {% if request.endpoint in ['admin_usuarios', 'admin_logins', 'admin_configuracoes', 'admin_impressoras'] %}expanded{% endif %}">
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_usuarios' %}active{% endif %}" href="{{ url_for('admin_usuarios') }}">
+                    <i class="bi bi-people-fill"></i> <span>Usuários</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_logins' %}active{% endif %}" href="{{ url_for('admin_logins') }}">
+                    <i class="bi bi-person-lock"></i> <span>Logins</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_impressoras' %}active{% endif %}" href="{{ url_for('admin_impressoras') }}">
+                    <i class="bi bi-printer-fill"></i> <span>Impressoras</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_configuracoes' %}active{% endif %}" href="{{ url_for('admin_configuracoes') }}">
+                    <i class="bi bi-sliders"></i> <span>Configurações</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Planejamento -->
+            <li class="menu-item {% if request.endpoint in ['admin_quotas', 'admin_metas'] %}has-active{% endif %}">
+              <button class="menu-toggle {% if request.endpoint in ['admin_quotas', 'admin_metas'] %}expanded{% endif %}" data-menu="planejamento">
+                <span>
+                  <i class="bi bi-clipboard-data"></i> <span>Planejamento</span>
+                </span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <ul class="submenu {% if request.endpoint in ['admin_quotas', 'admin_metas'] %}expanded{% endif %}">
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_quotas' %}active{% endif %}" href="{{ url_for('admin_quotas') }}">
+                    <i class="bi bi-clipboard-check"></i> <span>Quotas</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_metas' %}active{% endif %}" href="{{ url_for('admin_metas') }}">
+                    <i class="bi bi-bullseye"></i> <span>Metas</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <!-- Sistema -->
+            <li class="menu-item {% if request.endpoint in ['status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}has-active{% endif %}">
+              <button class="menu-toggle {% if request.endpoint in ['status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}expanded{% endif %}" data-menu="sistema">
+                <span>
+                  <i class="bi bi-server"></i> <span>Sistema</span>
+                </span>
+                <i class="bi bi-chevron-down"></i>
+              </button>
+              <ul class="submenu {% if request.endpoint in ['status_sistema', 'admin_auditoria', 'admin_relatorios_agendados', 'admin_backup', 'pagina_aprovacoes'] %}expanded{% endif %}">
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'status_sistema' %}active{% endif %}" href="{{ url_for('status_sistema') }}">
+                    <i class="bi bi-activity"></i> <span>Status</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_auditoria' %}active{% endif %}" href="{{ url_for('admin_auditoria') }}">
+                    <i class="bi bi-shield-check"></i> <span>Auditoria</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_relatorios_agendados' %}active{% endif %}" href="{{ url_for('admin_relatorios_agendados') }}">
+                    <i class="bi bi-calendar-check"></i> <span>Relatórios Agendados</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'admin_backup' %}active{% endif %}" href="{{ url_for('admin_backup') }}">
+                    <i class="bi bi-archive"></i> <span>Backup</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'pagina_aprovacoes' %}active{% endif %}" href="{{ url_for('pagina_aprovacoes') }}">
+                    <i class="bi bi-check-circle"></i> <span>Aprovações</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    
+    <!-- Footer do Sidebar -->
+    <div class="sidebar-footer">
+      <a class="nav-link" href="{{ url_for('logout') }}" style="color: var(--accent-red); padding: 10px 14px; border-radius: var(--border-radius); display: flex; align-items: center; gap: 12px; transition: all 0.2s ease;">
+        <i class="bi bi-box-arrow-right"></i> <span>Sair</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- Header Melhorado com Notificações e Métricas -->
+    <div class="top-header mb-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-secondary btn-sm d-md-none" id="toggleSidebar" aria-label="Toggle sidebar">
+            <i class="bi bi-list"></i>
+          </button>
+          <div class="realtime-metrics d-none d-lg-flex align-items-center gap-3">
+            <div class="metric-badge" id="metricImpressoes" title="Impressões hoje">
+              <i class="bi bi-printer"></i>
+              <span class="metric-value" id="metricImpressoesValue">-</span>
+            </div>
+            <div class="metric-badge" id="metricPaginas" title="Páginas hoje">
+              <i class="bi bi-file-text"></i>
+              <span class="metric-value" id="metricPaginasValue">-</span>
+            </div>
+            <div class="metric-badge" id="metricUltimaHora" title="Última hora">
+              <i class="bi bi-clock"></i>
+              <span class="metric-value" id="metricUltimaHoraValue">-</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <!-- Favoritos Rápidos -->
+          <div class="dropdown d-none d-md-block" id="favoritesDropdown">
+            <button class="btn btn-secondary btn-sm" type="button" id="favoritesBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Favoritos">
+              <i class="bi bi-star"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end favorites-menu" id="favoritesList">
+              <li><h6 class="dropdown-header">Favoritos</h6></li>
+              <li><hr class="dropdown-divider"></li>
+              <li class="text-center p-2">
+                <small class="text-muted">Nenhum favorito ainda</small>
+              </li>
+            </ul>
+          </div>
+          <!-- Notificações -->
+          <div class="dropdown" id="notificationsDropdown">
+            <button class="btn btn-secondary btn-sm position-relative" type="button" id="notificationsBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações">
+              <i class="bi bi-bell"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">
+                0
+              </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end notifications-menu" id="notificationsList" style="min-width: 350px; max-height: 500px; overflow-y: auto;">
+              <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <h6 class="mb-0">Notificações</h6>
+                <button class="btn btn-sm btn-link text-decoration-none p-0" id="markAllReadBtn" style="font-size: 0.75rem;">Marcar todas como lidas</button>
+              </li>
+              <li class="text-center p-4">
+                <i class="bi bi-bell-slash" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p class="text-muted mb-0 mt-2">Nenhuma notificação</p>
+              </li>
+            </ul>
+          </div>
+          <!-- WebSocket Status -->
+          <div class="ws-indicator connected" id="ws-status" title="Conectando...">
+            <i class="bi bi-wifi"></i>
+            <span class="ws-badge live" id="ws-badge">AO VIVO</span>
+          </div>
+          <!-- Busca -->
+          <button class="btn btn-search-modern" id="searchBtn" aria-label="Buscar" title="Buscar (Ctrl+K)">
+            <i class="bi bi-search"></i>
+            <span class="search-btn-text d-none d-md-inline">Buscar</span>
+          </button>
+          <!-- Tema -->
+          <button class="btn btn-secondary btn-sm" id="toggleTheme" aria-label="Alternar tema">
+            <i class="bi bi-moon-fill" id="themeIcon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal de Busca Global Melhorado -->
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content search-modal-content">
+          <div class="modal-header search-modal-header">
+            <div class="d-flex align-items-center w-100">
+              <div class="search-icon-wrapper">
+                <i class="bi bi-search"></i>
+              </div>
+              <input type="text" 
+                     class="form-control search-input" 
+                     id="globalSearchInput" 
+                     placeholder="Buscar usuários, setores, impressoras, documentos..." 
+                     autocomplete="off"
+                     autofocus>
+              <div class="search-shortcuts ms-3">
+                <kbd class="shortcut-key">Ctrl</kbd>
+                <span class="shortcut-plus">+</span>
+                <kbd class="shortcut-key">K</kbd>
+              </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body search-modal-body p-0">
+            <div id="searchResults" class="search-results-container">
+              <div class="search-empty-state">
+                <div class="empty-state-icon">
+                  <i class="bi bi-search"></i>
+                </div>
+                <p class="empty-state-text">Digite para começar a buscar</p>
+                <div class="search-suggestions">
+                  <span class="suggestion-tag">Usuários</span>
+                  <span class="suggestion-tag">Setores</span>
+                  <span class="suggestion-tag">Impressoras</span>
+                  <span class="suggestion-tag">Documentos</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer search-modal-footer">
+            <div class="d-flex justify-content-between align-items-center w-100">
+              <div class="search-footer-hints">
+                <span class="hint-item">
+                  <kbd>↑</kbd><kbd>↓</kbd> Navegar
+                </span>
+                <span class="hint-item">
+                  <kbd>Enter</kbd> Selecionar
+                </span>
+                <span class="hint-item">
+                  <kbd>Esc</kbd> Fechar
+                </span>
+              </div>
+              <div class="search-footer-info">
+                <span id="searchCount" class="text-muted"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+          {% for category, message in messages %}
+            <div class="toast align-items-center text-white bg-{{ category }} show" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="d-flex">
+                <div class="toast-body">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Theme Toggle
+    const toggleBtn = document.getElementById("toggleTheme");
+    const themeIcon = document.getElementById("themeIcon");
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    
+    // Aplica tema salvo
+    if (savedTheme === "light") {
+      document.body.classList.add("light-mode");
+      themeIcon.classList.replace("bi-moon-fill", "bi-sun-fill");
+    } else {
+      document.body.classList.remove("light-mode");
+      themeIcon.classList.replace("bi-sun-fill", "bi-moon-fill");
+    }
+    
+    // Toggle theme
+    toggleBtn.addEventListener("click", () => {
+      const isLight = document.body.classList.toggle("light-mode");
+      const newTheme = isLight ? "light" : "dark";
+      localStorage.setItem("theme", newTheme);
+      
+      // Atualiza ícone
+      if (isLight) {
+        themeIcon.classList.replace("bi-moon-fill", "bi-sun-fill");
+      } else {
+        themeIcon.classList.replace("bi-sun-fill", "bi-moon-fill");
+      }
+    });
+    
+    // Toast notifications
+    document.querySelectorAll(".toast").forEach(t => new bootstrap.Toast(t).show());
+
+    // Toggle sidebar em mobile
+    const toggleSidebar = document.getElementById("toggleSidebar");
+    if (toggleSidebar) {
+      toggleSidebar.addEventListener("click", () => {
+        document.querySelector(".sidebar").classList.toggle("show");
+      });
+    }
+
+    // Fecha sidebar ao clicar fora em mobile
+    document.addEventListener("click", (e) => {
+      const sidebar = document.querySelector(".sidebar");
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile && sidebar && !sidebar.contains(e.target) && !toggleSidebar.contains(e.target)) {
+        sidebar.classList.remove("show");
+      }
+    });
+
+    // Controle de menus expansíveis
+    document.querySelectorAll('.menu-toggle').forEach(toggle => {
+      toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const menuItem = this.closest('.menu-item');
+        const submenu = menuItem.querySelector('.submenu');
+        
+        if (submenu) {
+          const isExpanded = submenu.classList.contains('expanded');
+          
+          // Fecha todos os submenus do mesmo nível
+          const parentMenu = menuItem.parentElement;
+          if (parentMenu && parentMenu.classList.contains('submenu')) {
+            parentMenu.querySelectorAll('.submenu').forEach(sm => {
+              if (sm !== submenu) {
+                sm.classList.remove('expanded');
+                sm.previousElementSibling?.classList.remove('expanded');
+              }
+            });
+          }
+          
+          // Toggle do submenu atual
+          if (isExpanded) {
+            submenu.classList.remove('expanded');
+            this.classList.remove('expanded');
+          } else {
+            submenu.classList.add('expanded');
+            this.classList.add('expanded');
+          }
+          
+          // Salva estado no localStorage
+          const menuId = this.getAttribute('data-menu');
+          if (menuId) {
+            localStorage.setItem(`menu_${menuId}`, !isExpanded ? 'expanded' : 'collapsed');
+          }
+        }
+      });
+    });
+
+    // Restaura estado dos menus do localStorage
+    document.querySelectorAll('.menu-toggle').forEach(toggle => {
+      const menuId = toggle.getAttribute('data-menu');
+      if (menuId) {
+        const savedState = localStorage.getItem(`menu_${menuId}`);
+        const submenu = toggle.closest('.menu-item').querySelector('.submenu');
+        
+        // Se não há item ativo, restaura do localStorage
+        if (submenu && !submenu.querySelector('.nav-link.active')) {
+          if (savedState === 'expanded') {
+            submenu.classList.add('expanded');
+            toggle.classList.add('expanded');
+          }
+        }
+      }
+    });
+
+    // Sistema de Busca Global
+    const searchBtn = document.getElementById("searchBtn");
+    const searchModal = document.getElementById("searchModal");
+    const globalSearchInput = document.getElementById("globalSearchInput");
+    const searchResults = document.getElementById("searchResults");
+    let searchTimeout = null;
+
+    // Abre modal ao clicar no botão
+    if (searchBtn && searchModal) {
+      searchBtn.addEventListener("click", () => {
+        const modal = new bootstrap.Modal(searchModal);
+        modal.show();
+        // Foca no input após o modal abrir
+        searchModal.addEventListener('shown.bs.modal', function () {
+          if (globalSearchInput) {
+            globalSearchInput.focus();
+          }
+        }, { once: true });
+      });
+    }
+
+    // Atalho de teclado Ctrl+K
+    document.addEventListener("keydown", (e) => {
+      // Ctrl+K ou Cmd+K (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        if (searchBtn && searchModal) {
+          const modal = new bootstrap.Modal(searchModal);
+          modal.show();
+          setTimeout(() => {
+            if (globalSearchInput) {
+              globalSearchInput.focus();
+            }
+          }, 300);
+        }
+      }
+      // ESC fecha o modal
+      if (e.key === 'Escape' && searchModal) {
+        const modalInstance = bootstrap.Modal.getInstance(searchModal);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+      }
+    });
+
+    // Busca em tempo real
+    if (globalSearchInput) {
+      globalSearchInput.addEventListener("input", (e) => {
+        const query = e.target.value.trim();
+        
+        // Limpa timeout anterior
+        if (searchTimeout) {
+          clearTimeout(searchTimeout);
+        }
+        
+        // Se query vazia, mostra estado vazio
+        if (query.length < 1) {
+          currentResults = [];
+          currentSelectedIndex = -1;
+          mostrarEstadoVazio();
+          document.getElementById('searchCount').textContent = '';
+          return;
+        }
+        
+        // Debounce: aguarda 300ms após parar de digitar
+        searchTimeout = setTimeout(() => {
+          buscar(query);
+        }, 300);
+      });
+
+      // Enter executa busca imediatamente
+      globalSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (searchTimeout) {
+            clearTimeout(searchTimeout);
+          }
+          const query = e.target.value.trim();
+          if (query.length >= 2) {
+            buscar(query);
+          }
+        }
+      });
+    }
+
+    // Função de busca melhorada
+    let currentSelectedIndex = -1;
+    let currentResults = [];
+
+    function buscar(query) {
+      if (!query || query.length < 1) {
+        currentResults = [];
+        currentSelectedIndex = -1;
+        mostrarEstadoVazio();
+        return;
+      }
+
+      // Mostra loading
+      searchResults.innerHTML = `
+        <div class="search-loading">
+          <i class="bi bi-arrow-repeat"></i>
+          <p class="text-muted mt-3">Buscando...</p>
+        </div>
+      `;
+
+      fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Resposta da busca:', data); // Debug
+          currentResults = data.results || [];
+          currentSelectedIndex = -1;
+          
+          if (currentResults.length === 0) {
+            mostrarSemResultados(query);
+            document.getElementById('searchCount').textContent = '';
+            return;
+          }
+          
+          renderizarResultados(currentResults);
+          document.getElementById('searchCount').textContent = `${currentResults.length} resultado${currentResults.length !== 1 ? 's' : ''}`;
+        })
+        .catch(error => {
+          console.error('Erro na busca:', error);
+          searchResults.innerHTML = `
+            <div class="search-no-results">
+              <i class="bi bi-exclamation-triangle"></i>
+              <p class="text-muted mt-3">Erro ao realizar busca: ${escapeHtml(error.message)}</p>
+              <p class="text-muted" style="font-size: 12px; margin-top: 8px;">Verifique o console do navegador para mais detalhes</p>
+            </div>
+          `;
+          document.getElementById('searchCount').textContent = '';
+        });
+    }
+
+    function mostrarEstadoVazio() {
+      searchResults.innerHTML = `
+        <div class="search-empty-state">
+          <div class="empty-state-icon">
+            <i class="bi bi-search"></i>
+          </div>
+          <p class="empty-state-text">Digite para começar a buscar</p>
+          <div class="search-suggestions">
+            <span class="suggestion-tag">Usuários</span>
+            <span class="suggestion-tag">Setores</span>
+            <span class="suggestion-tag">Impressoras</span>
+            <span class="suggestion-tag">Documentos</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function mostrarSemResultados(query) {
+      // Tenta buscar sugestões (primeira letra ou primeiras letras)
+      let sugestoes = [];
+      if (query.length >= 1) {
+        const primeiraLetra = query[0].toLowerCase();
+        sugestoes = [
+          `Tente buscar por "${primeiraLetra}"`,
+          "Verifique a ortografia",
+          "Use termos mais gerais"
+        ];
+      }
+      
+      let sugestoesHtml = '';
+      if (sugestoes.length > 0) {
+        sugestoesHtml = `
+          <div class="mt-3">
+            <p class="text-muted" style="font-size: 12px; margin-bottom: 8px;"><strong>Dicas:</strong></p>
+            <ul class="list-unstyled" style="font-size: 12px; color: var(--text-muted);">
+              ${sugestoes.map(s => `<li>• ${s}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }
+      
+      searchResults.innerHTML = `
+        <div class="search-no-results">
+          <i class="bi bi-search"></i>
+          <p class="text-muted mt-3">Nenhum resultado encontrado para <strong>"${escapeHtml(query)}"</strong></p>
+          <p class="text-muted" style="font-size: 12px; margin-top: 8px;">Tente usar termos diferentes ou verifique a ortografia</p>
+          ${sugestoesHtml}
+        </div>
+      `;
+    }
+
+    function renderizarResultados(results) {
+      // Agrupa resultados por tipo
+      const grouped = {};
+      results.forEach((result, globalIndex) => {
+        const type = result.type || 'Outros';
+        if (!grouped[type]) {
+          grouped[type] = [];
+        }
+        grouped[type].push({ ...result, globalIndex });
+      });
+
+      let html = '';
+      let itemCount = 0;
+      
+      // Ordem de exibição das categorias
+      const categoryOrder = ['Usuário', 'Setor', 'Impressora', 'Documento', 'Outros'];
+      
+      categoryOrder.forEach(category => {
+        if (grouped[category] && grouped[category].length > 0) {
+          html += `<div class="search-result-category">`;
+          html += `<div class="search-category-title">${category} (${grouped[category].length})</div>`;
+          
+          grouped[category].forEach((result) => {
+            html += `
+              <a href="${result.url}" 
+                 class="search-result-item" 
+                 data-index="${result.globalIndex}"
+                 onclick="event.preventDefault(); window.location.href='${result.url}';">
+                <div class="result-icon">
+                  <i class="bi ${result.icon || 'bi-circle'}"></i>
+                </div>
+                <div class="result-content">
+                  <div class="result-title">${highlightMatch(escapeHtml(result.title), globalSearchInput.value)}</div>
+                  <div class="result-description">${escapeHtml(result.description || '')}</div>
+                </div>
+                <div class="result-badge">${escapeHtml(result.type || '')}</div>
+              </a>
+            `;
+            itemCount++;
+          });
+          
+          html += `</div>`;
+        }
+      });
+
+      // Se houver outras categorias não listadas
+      Object.keys(grouped).forEach(category => {
+        if (!categoryOrder.includes(category)) {
+          html += `<div class="search-result-category">`;
+          html += `<div class="search-category-title">${category} (${grouped[category].length})</div>`;
+          
+          grouped[category].forEach((result) => {
+            html += `
+              <a href="${result.url}" 
+                 class="search-result-item" 
+                 data-index="${result.globalIndex}"
+                 onclick="event.preventDefault(); window.location.href='${result.url}';">
+                <div class="result-icon">
+                  <i class="bi ${result.icon || 'bi-circle'}"></i>
+                </div>
+                <div class="result-content">
+                  <div class="result-title">${highlightMatch(escapeHtml(result.title), globalSearchInput.value)}</div>
+                  <div class="result-description">${escapeHtml(result.description || '')}</div>
+                </div>
+                <div class="result-badge">${escapeHtml(result.type || '')}</div>
+              </a>
+            `;
+            itemCount++;
+          });
+          
+          html += `</div>`;
+        }
+      });
+
+      searchResults.innerHTML = html;
+      
+      // Adiciona eventos de hover
+      document.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+          document.querySelectorAll('.search-result-item').forEach(i => i.classList.remove('active'));
+          this.classList.add('active');
+          currentSelectedIndex = parseInt(this.dataset.index);
+        });
+      });
+    }
+
+    function highlightMatch(text, query) {
+      if (!query || query.length < 2) return text;
+      const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+      return text.replace(regex, '<mark style="background: var(--accent-yellow); padding: 2px 4px; border-radius: 3px;">$1</mark>');
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Navegação com teclado
+    if (globalSearchInput) {
+      globalSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (currentResults.length > 0) {
+            currentSelectedIndex = Math.min(currentSelectedIndex + 1, currentResults.length - 1);
+            atualizarSelecao();
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (currentResults.length > 0) {
+            currentSelectedIndex = Math.max(currentSelectedIndex - 1, -1);
+            atualizarSelecao();
+          }
+        } else if (e.key === 'Enter' && currentSelectedIndex >= 0 && currentResults[currentSelectedIndex]) {
+          e.preventDefault();
+          window.location.href = currentResults[currentSelectedIndex].url;
+        }
+      });
+    }
+
+    function atualizarSelecao() {
+      document.querySelectorAll('.search-result-item').forEach((item) => {
+        const itemIndex = parseInt(item.dataset.index);
+        if (itemIndex === currentSelectedIndex) {
+          item.classList.add('active');
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    // Função auxiliar para escapar HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // ===== SISTEMA DE NOTIFICAÇÕES EM TEMPO REAL =====
+    let notificationsInterval = null;
+    let metricsInterval = null;
+    
+    function carregarNotificacoes() {
+      fetch('/api/notifications?nao_lidas=true')
+        .then(res => res.json())
+        .then(data => {
+          const badge = document.getElementById('notificationBadge');
+          const list = document.getElementById('notificationsList');
+          
+          if (data.notifications && data.notifications.length > 0) {
+            const nao_lidas = data.notifications.filter(n => !n.read).length;
+            
+            if (nao_lidas > 0) {
+              badge.textContent = nao_lidas > 99 ? '99+' : nao_lidas;
+              badge.style.display = 'block';
+            } else {
+              badge.style.display = 'none';
+            }
+            
+            // Atualiza lista (mostra apenas as 5 mais recentes)
+            const recentes = data.notifications.slice(0, 5);
+            if (recentes.length > 0) {
+              list.innerHTML = `
+                <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                  <h6 class="mb-0">Notificações</h6>
+                  <button class="btn btn-sm btn-link text-decoration-none p-0" id="markAllReadBtn" style="font-size: 0.75rem;">Marcar todas como lidas</button>
+                </li>
+              `;
+              
+              recentes.forEach(notif => {
+                const item = document.createElement('li');
+                item.className = `notification-item ${notif.read ? 'read' : 'unread'}`;
+                item.innerHTML = `
+                  <div class="notification-title">${escapeHtml(notif.title || 'Notificação')}</div>
+                  <div class="notification-message">${escapeHtml(notif.message || '')}</div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="notification-time">${formatarData(notif.created_at)}</span>
+                    <span class="notification-level ${notif.level || 'info'}">${notif.level || 'info'}</span>
+                  </div>
+                `;
+                item.addEventListener('click', () => {
+                  fetch('/api/notifications', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'mark_read', id: notif.id})
+                  }).then(() => carregarNotificacoes());
+                });
+                list.appendChild(item);
+              });
+              
+              if (data.notifications.length > 5) {
+                const more = document.createElement('li');
+                more.className = 'text-center p-2';
+                more.innerHTML = `<small class="text-muted">+${data.notifications.length - 5} mais</small>`;
+                list.appendChild(more);
+              }
+            }
+          } else {
+            badge.style.display = 'none';
+            list.innerHTML = `
+              <li class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                <h6 class="mb-0">Notificações</h6>
+              </li>
+              <li class="text-center p-4">
+                <i class="bi bi-bell-slash" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p class="text-muted mb-0 mt-2">Nenhuma notificação</p>
+              </li>
+            `;
+          }
+        })
+        .catch(err => console.error('Erro ao carregar notificações:', err));
+    }
+    
+    // Marcar todas como lidas
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'markAllReadBtn') {
+        fetch('/api/notifications', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({action: 'mark_all_read'})
+        }).then(() => carregarNotificacoes());
+      }
+    });
+    
+    // ===== MÉTRICAS EM TEMPO REAL =====
+    function atualizarMetricas() {
+      fetch('/api/metrics/realtime')
+        .then(res => res.json())
+        .then(data => {
+          const impressoesEl = document.getElementById('metricImpressoesValue');
+          const paginasEl = document.getElementById('metricPaginasValue');
+          const ultimaHoraEl = document.getElementById('metricUltimaHoraValue');
+          
+          if (impressoesEl) {
+            impressoesEl.textContent = data.impressoes_hoje || 0;
+            impressoesEl.parentElement.classList.remove('loading');
+          }
+          if (paginasEl) {
+            paginasEl.textContent = data.paginas_hoje || 0;
+            paginasEl.parentElement.classList.remove('loading');
+          }
+          if (ultimaHoraEl) {
+            ultimaHoraEl.textContent = data.impressoes_ultima_hora || 0;
+            ultimaHoraEl.parentElement.classList.remove('loading');
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao atualizar métricas:', err);
+          // Adiciona classe loading em caso de erro
+          document.querySelectorAll('.metric-badge').forEach(badge => {
+            badge.classList.add('loading');
+          });
+        });
+    }
+    
+    // ===== FAVORITOS =====
+    function carregarFavoritos() {
+      fetch('/api/favorites')
+        .then(res => res.json())
+        .then(data => {
+          const list = document.getElementById('favoritesList');
+          if (data.favorites && data.favorites.length > 0) {
+            list.innerHTML = '<li><h6 class="dropdown-header">Favoritos</h6></li><li><hr class="dropdown-divider"></li>';
+            
+            // Agrupa por categoria
+            const porCategoria = {};
+            data.favorites.forEach(fav => {
+              const cat = fav.categoria || 'Geral';
+              if (!porCategoria[cat]) porCategoria[cat] = [];
+              porCategoria[cat].push(fav);
+            });
+            
+            Object.keys(porCategoria).forEach(cat => {
+              const header = document.createElement('li');
+              header.className = 'dropdown-header';
+              header.textContent = cat;
+              list.appendChild(header);
+              
+              porCategoria[cat].forEach(fav => {
+                const item = document.createElement('li');
+                item.innerHTML = `
+                  <a class="dropdown-item favorite-item" href="${fav.url}">
+                    <i class="bi ${fav.icone || 'bi-star'}"></i>
+                    <span>${escapeHtml(fav.nome)}</span>
+                  </a>
+                `;
+                list.appendChild(item);
+              });
+              
+              if (Object.keys(porCategoria).indexOf(cat) < Object.keys(porCategoria).length - 1) {
+                const divider = document.createElement('li');
+                divider.innerHTML = '<hr class="dropdown-divider">';
+                list.appendChild(divider);
+              }
+            });
+          } else {
+            list.innerHTML = `
+              <li><h6 class="dropdown-header">Favoritos</h6></li>
+              <li><hr class="dropdown-divider"></li>
+              <li class="text-center p-2">
+                <small class="text-muted">Nenhum favorito ainda</small>
+                <br>
+                <small class="text-muted">Use o menu de contexto para adicionar</small>
+              </li>
+            `;
+          }
+        })
+        .catch(err => console.error('Erro ao carregar favoritos:', err));
+    }
+    
+    // Função auxiliar para formatar data
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      try {
+        const data = new Date(dataStr);
+        const agora = new Date();
+        const diffMs = agora - data;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Agora';
+        if (diffMins < 60) return `${diffMins}min atrás`;
+        if (diffHours < 24) return `${diffHours}h atrás`;
+        if (diffDays < 7) return `${diffDays}d atrás`;
+        
+        return data.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
+      } catch {
+        return dataStr;
+      }
+    }
+    
+    // Inicializa quando a página carregar
+    document.addEventListener('DOMContentLoaded', () => {
+      // Carrega notificações e métricas
+      carregarNotificacoes();
+      carregarFavoritos();
+      atualizarMetricas();
+      
+      // Atualiza a cada 30 segundos
+      notificationsInterval = setInterval(carregarNotificacoes, 30000);
+      metricsInterval = setInterval(atualizarMetricas, 30000);
+      
+      // Adiciona loading inicial nas métricas
+      document.querySelectorAll('.metric-badge').forEach(badge => {
+        badge.classList.add('loading');
+      });
+    });
+    
+    // Limpa intervalos ao sair da página
+    window.addEventListener('beforeunload', () => {
+      if (notificationsInterval) clearInterval(notificationsInterval);
+      if (metricsInterval) clearInterval(metricsInterval);
+    });
+  </script>
+  
+  <!-- WebSocket para atualizações em tempo real -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
+  
+  {% block scripts %}{% endblock %}
+</body>
+</html>

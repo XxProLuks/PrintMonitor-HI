@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Admin - Backup{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-archive"></i> Gestão de Backups</h2>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <i class="bi bi-info-circle"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Criar Novo Backup</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      <input type="hidden" name="action" value="create">
+      <div class="col-md-4">
+        <label class="form-label">Nome do Backup</label>
+        <input type="text" name="nome" class="form-control" placeholder="backup_manual" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Descrição</label>
+        <input type="text" name="descricao" class="form-control" placeholder="Descrição opcional">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">&nbsp;</label>
+        <button type="submit" class="btn btn-primary btn-modern w-100">
+          <i class="bi bi-save"></i> Criar Backup
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Backups Disponíveis</h5>
+  </div>
+  <div class="card-body">
+    {% if backups %}
+    <div class="table-responsive">
+      <table class="table table-modern">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Tamanho</th>
+            <th>Data de Criação</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for backup in backups %}
+          <tr>
+            <td><strong>{{ backup.nome }}</strong></td>
+            <td>{{ backup.descricao or '-' }}</td>
+            <td>
+              {% if backup.tamanho %}
+                {% if backup.tamanho > 1048576 %}
+                  {{ "%.2f"|format(backup.tamanho / 1048576) }} MB
+                {% else %}
+                  {{ "%.2f"|format(backup.tamanho / 1024) }} KB
+                {% endif %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ backup.created_at[:19] if backup.created_at else 'N/A' }}</td>
+            <td>
+              {% if backup.existe %}
+              <span class="badge bg-success badge-modern">Disponível</span>
+              {% else %}
+              <span class="badge bg-danger badge-modern">Arquivo não encontrado</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if backup.existe %}
+              <form method="post" style="display: inline;">
+                <input type="hidden" name="action" value="restore">
+                <input type="hidden" name="backup_id" value="{{ backup.id }}">
+                <button type="submit" class="btn btn-warning btn-sm btn-modern" 
+                        onclick="return confirm('ATENÇÃO: Isso irá restaurar o backup e substituir o banco atual. Continuar?');">
+                  <i class="bi bi-arrow-counterclockwise"></i> Restaurar
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      <i class="bi bi-info-circle"></i> Nenhum backup encontrado.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

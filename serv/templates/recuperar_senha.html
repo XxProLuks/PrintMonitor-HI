@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Senha - Print Monitor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --card-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--primary-gradient);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .recovery-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .recovery-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .recovery-header i {
+      font-size: 3rem;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .recovery-header h2 {
+      color: #333;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .recovery-header p {
+      color: #666;
+      margin-top: 5px;
+      font-size: 0.9rem;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      color: #555;
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-control {
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px 15px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      outline: none;
+    }
+
+    .btn-recovery {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn-recovery:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+      color: white;
+    }
+
+    .btn-secondary-custom {
+      width: 100%;
+      padding: 12px;
+      background: #6c757d;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary-custom:hover {
+      background: #5a6268;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .alert {
+      border-radius: 10px;
+      border: none;
+      padding: 12px 15px;
+      margin-top: 15px;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border-left: 4px solid #ffc107;
+    }
+
+    .alert-info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border-left: 4px solid #17a2b8;
+    }
+
+    .alert-danger {
+      background-color: #fee;
+      color: #c33;
+      border-left: 4px solid #c33;
+    }
+
+    .senha-gerada {
+      background: #f8f9fa;
+      border: 2px dashed #667eea;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .senha-gerada h4 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+
+    .senha-gerada .senha-texto {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #667eea;
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+      letter-spacing: 3px;
+      transition: all 0.3s ease;
+      border: 2px solid #667eea;
+    }
+    
+    .senha-gerada .senha-texto:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .timer-box {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #17a2b8;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 480px) {
+      .recovery-container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="recovery-container">
+    <div class="recovery-header">
+      <i class="bi bi-key-fill"></i>
+      <h2>Recuperar Senha</h2>
+      <p>Redefina sua senha de acesso</p>
+    </div>
+
+    <!-- Formulário de validação de código -->
+    <div class="info-box">
+      <i class="bi bi-info-circle-fill"></i>
+      <strong>Como funciona:</strong><br>
+      Solicite um código de recuperação ao administrador do sistema. Depois, informe seu nome de usuário e o código recebido para redefinir sua senha.
+    </div>
+
+    <form method="POST" id="form-recuperacao">
+      <div class="form-group">
+        <label for="username">
+          <i class="bi bi-person"></i> Nome de Usuário
+        </label>
+        <input 
+          type="text" 
+          id="username"
+          name="username" 
+          class="form-control" 
+          placeholder="Digite seu nome de usuário"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="codigo">
+          <i class="bi bi-key"></i> Código de Recuperação
+        </label>
+        <input 
+          type="text" 
+          id="codigo"
+          name="codigo" 
+          class="form-control" 
+          placeholder="Digite o código (ex: ABCD-1234-EFGH)"
+          required
+          maxlength="14"
+          style="font-size: 1.2rem; letter-spacing: 2px; text-align: center; font-weight: bold;"
+          oninput="formatarCodigo(this)"
+        >
+        <small class="text-muted" style="font-size: 0.85rem; display: block; margin-top: 5px;">
+          <i class="bi bi-info-circle"></i> Digite o código fornecido pelo administrador
+        </small>
+      </div>
+
+      <button type="submit" class="btn-recovery">
+        <i class="bi bi-shield-lock-fill"></i> Validar Código e Redefinir Senha
+      </button>
+    </form>
+
+    <a href="{{ url_for('login') }}" class="btn-secondary-custom">
+      <i class="bi bi-arrow-left"></i> Voltar para Login
+    </a>
+    
+    <script>
+      function formatarCodigo(input) {
+        // Remove tudo que não é letra ou número
+        let valor = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        
+        // Limita a 12 caracteres
+        valor = valor.substring(0, 12);
+        
+        // Adiciona hífens
+        if (valor.length > 8) {
+          valor = valor.substring(0, 4) + '-' + valor.substring(4, 8) + '-' + valor.substring(8);
+        } else if (valor.length > 4) {
+          valor = valor.substring(0, 4) + '-' + valor.substring(4);
+        }
+        
+        input.value = valor;
+      }
+      
+      // Limpa o campo quando colar (remove hífens e espaços)
+      document.getElementById('codigo').addEventListener('paste', function(e) {
+        e.preventDefault();
+        const texto = (e.clipboardData || window.clipboardData).getData('text');
+        // Remove tudo que não é letra ou número e converte para maiúsculo
+        const textoLimpo = texto.replace(/[^A-Z0-9]/gi, '').toUpperCase().substring(0, 12);
+        this.value = textoLimpo;
+        formatarCodigo(this);
+      });
+      
+      // Foca no campo de código quando o usuário preencher o username
+      document.getElementById('username').addEventListener('blur', function() {
+        if (this.value.trim() !== '') {
+          document.getElementById('codigo').focus();
+        }
+      });
+    </script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

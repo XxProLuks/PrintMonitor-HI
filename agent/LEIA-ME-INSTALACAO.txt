@@ -1,0 +1,92 @@
+========================================
+  INSTALAÇÃO RÁPIDA DO AGENTE
+========================================
+
+⚠️ IMPORTANTE - ANTES DE INSTALAR:
+-----------------------------------
+1. ATIVE O EVENT ID 307 (OBRIGATÓRIO!):
+   
+   PowerShell como Administrador:
+   .\habilitar_event_log_307.ps1
+   
+   OU:
+   wevtutil sl Microsoft-Windows-PrintService/Operational /e:true
+   
+   Sem isso, o agente NÃO funcionará!
+
+2. VERIFIQUE SE FUNCIONOU:
+   
+   Faça uma impressão de teste e execute:
+   Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-PrintService/Operational'; ID=307} -MaxEvents 1
+   
+   Se retornar um evento = ✅ Pronto para instalar!
+
+🎯 INTERFACE GRÁFICA (RECOMENDADO):
+------------------------------------
+Para instalar em múltiplos computadores de forma fácil:
+
+1. Duplo clique em: instalar_agente.bat
+2. Configure domínio, usuário e senha
+3. Adicione computadores à lista (ou carregue de arquivo)
+4. Clique em "Instalar Agente"
+5. Aguarde a conclusão
+
+A interface permite:
+- Instalar em vários PCs de uma vez
+- Ver progresso em tempo real
+- Verificar status dos agentes
+- Ver usuário logado em cada PC
+- Desinstalar agentes
+- Salvar listas de computadores
+
+INSTALAÇÃO LOCAL (UM COMPUTADOR):
+---------------------------------
+1. ATIVE EVENTOS primeiro (veja acima)
+2. Clique com botão direito em: install_agent.bat
+3. Selecione: "Executar como administrador"
+4. Siga as instruções na tela
+
+INSTALAÇÃO REMOTA (LINHA DE COMANDO):
+-------------------------------------
+1. ATIVE EVENTOS em cada computador primeiro
+2. Crie um arquivo "computadores.txt" com um computador por linha
+3. Abra PowerShell como Administrador
+4. Execute:
+
+   .\install_multiple.ps1 -ComputerList computadores.txt -Install
+
+VERIFICAR STATUS:
+-----------------
+Interface Gráfica:
+   instalar_agente.bat -> "Verificar Status"
+
+PowerShell:
+   .\check_agent_status.ps1
+
+DESINSTALAR:
+------------
+Interface Gráfica:
+   instalar_agente.bat -> "Desinstalar Agente"
+
+Linha de Comando:
+   uninstall_agent.bat (como administrador)
+
+REQUISITOS:
+-----------
+- Windows 7 ou superior
+- Python 3.6+ instalado
+- Event ID 307 habilitado (OBRIGATÓRIO!)
+- Permissões de Administrador
+- Conectividade com servidor
+
+MAIS INFORMAÇÕES:
+-----------------
+Tutorial Completo: TUTORIAL_INSTALACAO_COMPLETA.md
+Guia Rápido: GUIA_RAPIDO.md
+Ativar Eventos: ATIVAR_EVENTOS.md
+Checklist: CHECKLIST_INSTALACAO.md
+Interface Gráfica: README_INSTALADOR_GUI.md
+Instalação Manual: INSTALACAO_AGENTE.md
+
+========================================
+

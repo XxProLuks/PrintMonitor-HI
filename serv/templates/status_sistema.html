@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block title %}Status do Sistema - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-activity"></i> Status do Sistema</h2>
+</div>
+
+<!-- Status do Banco de Dados -->
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-database"></i> Banco de Dados</h5>
+  </div>
+  <div class="card-body">
+    {% if db_info.error %}
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i> Erro ao acessar banco: {{ db_info.error }}
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--accent-blue);">
+              <i class="bi bi-hdd"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ db_info.size_mb }} MB</div>
+              <div class="stat-label">Tamanho do Banco</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--accent-green);">
+              <i class="bi bi-file-text"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ "{:,}".format(db_info.total_events) }}</div>
+              <div class="stat-label">Total de Eventos</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--accent-purple);">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ db_info.total_users }}</div>
+              <div class="stat-label">Usuários Únicos</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: var(--accent-yellow);">
+              <i class="bi bi-printer"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ db_info.total_printers }}</div>
+              <div class="stat-label">Impressoras</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {% if db_info.ultimo_evento %}
+      <div class="mt-3 p-3" style="background: var(--bg-tertiary); border-radius: 8px;">
+        <strong><i class="bi bi-clock-history"></i> Último Evento:</strong><br>
+        Data: {{ db_info.ultimo_evento.date }} | 
+        Usuário: {{ db_info.ultimo_evento.user }} | 
+        Impressora: {{ db_info.ultimo_evento.printer }} | 
+        Duplex: 
+        {% if db_info.ultimo_evento.duplex == 1 %}
+          <span class="badge bg-success">Sim</span>
+        {% elif db_info.ultimo_evento.duplex == 0 %}
+          <span class="badge bg-secondary">Não</span>
+        {% else %}
+          <span class="badge bg-warning">Desconhecido</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- Recursos do Sistema -->
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-cpu"></i> Recursos do Sistema</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="progress-container mb-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="bi bi-cpu"></i> CPU</span>
+            <span>{{ stats.cpu_percent }}%</span>
+          </div>
+          <div class="progress" style="height: 25px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ stats.cpu_percent }}%; background: var(--accent-blue);" 
+                 aria-valuenow="{{ stats.cpu_percent }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="progress-container mb-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="bi bi-memory"></i> Memória</span>
+            <span>{{ stats.memory_percent }}%</span>
+          </div>
+          <div class="progress" style="height: 25px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ stats.memory_percent }}%; background: var(--accent-green);" 
+                 aria-valuenow="{{ stats.memory_percent }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+          </div>
+          <small class="text-muted">{{ stats.memory_available_gb }} GB disponível de {{ stats.memory_total_gb }} GB</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="progress-container mb-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="bi bi-hdd"></i> Disco</span>
+            <span>{{ stats.disk_percent }}%</span>
+          </div>
+          <div class="progress" style="height: 25px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ stats.disk_percent }}%; background: var(--accent-yellow);" 
+                 aria-valuenow="{{ stats.disk_percent }}" aria-valuemin="0" aria-valuemax="100">
+            </div>
+          </div>
+          <small class="text-muted">{{ stats.disk_free_gb }} GB livre de {{ stats.disk_total_gb }} GB</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <div class="info-box">
+          <i class="bi bi-clock"></i>
+          <strong>Uptime:</strong> {{ stats.uptime }}
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="info-box">
+          <i class="bi bi-code-slash"></i>
+          <strong>Python:</strong> {{ stats.python_version }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Funcionalidades -->
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-gear"></i> Funcionalidades</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <ul class="list-unstyled">
+          <li class="mb-2">
+            <i class="bi bi-{{ 'check-circle-fill text-success' if features.rate_limiting else 'x-circle text-danger' }}"></i>
+            Rate Limiting: {{ 'Habilitado' if features.rate_limiting else 'Desabilitado' }}
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-{{ 'check-circle-fill text-success' if features.csrf else 'x-circle text-danger' }}"></i>
+            CSRF Protection: {{ 'Habilitado' if features.csrf else 'Desabilitado' }}
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-{{ 'check-circle-fill text-success' if features.compression else 'x-circle text-danger' }}"></i>
+            Compressão HTTP: {{ 'Habilitada' if features.compression else 'Desabilitada' }}
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <ul class="list-unstyled">
+          <li class="mb-2">
+            <i class="bi bi-{{ 'check-circle-fill text-success' if features.pdf_export else 'x-circle text-danger' }}"></i>
+            Exportação PDF: {{ 'Disponível' if features.pdf_export else 'Indisponível' }}
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-{{ 'check-circle-fill text-success' if features.modules else 'x-circle text-danger' }}"></i>
+            Módulos Avançados: {{ 'Disponíveis' if features.modules else 'Indisponíveis' }}
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            Plataforma: {{ stats.platform }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Links Rápidos -->
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Links Rápidos</h5>
+  </div>
+  <div class="card-body">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-modern">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="{{ url_for('admin_configuracoes') }}" class="btn btn-secondary btn-modern">
+        <i class="bi bi-gear"></i> Configurações
+      </a>
+      <a href="{{ url_for('admin_backup') }}" class="btn btn-info btn-modern">
+        <i class="bi bi-archive"></i> Backups
+      </a>
+      <a href="/health" target="_blank" class="btn btn-success btn-modern">
+        <i class="bi bi-heart-pulse"></i> Health Check (JSON)
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background: var(--bg-tertiary);
+  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.progress-container {
+  padding: 15px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+}
+
+.info-box {
+  padding: 15px;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent-blue);
+  color: var(--text-primary);
+}
+</style>
+{% endblock %}
+

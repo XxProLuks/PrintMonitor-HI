@@ -1,0 +1,32 @@
+# Dependências do Servidor
+Flask>=2.3.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+python-dotenv>=1.0.0
+werkzeug>=2.3.0
+flask-compress>=1.13
+flask-limiter>=3.5.0
+flask-wtf>=1.2.0
+WTForms>=3.1.0
+reportlab>=4.0.0
+
+# Dependências do Agente
+pywin32>=306
+wmi>=1.5.1
+pysnmp>=4.4.12
+
+# Dependências de IA/ML (Opcionais - sistema funciona sem elas)
+numpy>=1.24.0
+scikit-learn>=1.3.0
+prophet>=1.1.4
+plotly>=5.0.0  # Necessário para gráficos interativos do Prophet
+openai>=1.0.0
+transformers>=4.30.0
+torch>=2.0.0
+requests>=2.31.0
+
+# Dependências para novas funcionalidades (Opcionais)
+psutil>=5.9.0
+flask-socketio>=5.3.0
+matplotlib>=3.7.0
+

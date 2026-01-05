@@ -1,0 +1,1223 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Print Monitor{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+  <p class="text-muted">Visão geral e estatísticas do sistema</p>
+</div>
+
+<!-- Filtros de Data -->
+<div class="filter-card mb-4">
+  <!-- Filtros Rápidos -->
+  <div class="mb-3">
+    <div class="btn-group" role="group">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline-modern {% if not start_date and not end_date %}active{% endif %}">
+        <i class="bi bi-calendar-range"></i> Tudo
+      </a>
+      {% if today %}
+      <a href="{{ url_for('dashboard', start_date=today.isoformat(), end_date=today.isoformat()) }}" 
+         class="btn btn-outline-modern {% if start_date == today.isoformat() and end_date == today.isoformat() %}active{% endif %}">
+        <i class="bi bi-calendar-day"></i> Hoje
+      </a>
+      <a href="{{ url_for('dashboard', start_date=week_ago.isoformat(), end_date=today.isoformat()) }}" 
+         class="btn btn-outline-modern {% if start_date == week_ago.isoformat() and end_date == today.isoformat() %}active{% endif %}">
+        <i class="bi bi-calendar-week"></i> Última Semana
+      </a>
+      <a href="{{ url_for('dashboard', start_date=month_ago.isoformat(), end_date=today.isoformat()) }}" 
+         class="btn btn-outline-modern {% if start_date == month_ago.isoformat() and end_date == today.isoformat() %}active{% endif %}">
+        <i class="bi bi-calendar-month"></i> Último Mês
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  
+  <form method="GET" class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label"><i class="bi bi-calendar-event"></i> Data Início</label>
+      <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label"><i class="bi bi-calendar-event-fill"></i> Data Fim</label>
+      <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+    </div>
+    <div class="col-md-6 d-flex align-items-end">
+      <button type="submit" class="btn btn-modern me-2">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-modern me-2">
+        <i class="bi bi-arrow-clockwise"></i> Limpar
+      </a>
+      <a href="{{ url_for('export_dashboard_excel', start_date=start_date, end_date=end_date) }}" 
+         class="btn btn-success btn-modern me-2">
+        <i class="bi bi-file-earmark-excel"></i> Excel
+      </a>
+      <a href="{{ url_for('export_dashboard_pdf', start_date=start_date, end_date=end_date) }}" 
+         class="btn btn-danger btn-modern">
+        <i class="bi bi-file-earmark-pdf"></i> PDF
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Última Impressão -->
+{% if ultimo_evento %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="alert alert-info border-0 shadow-sm">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+          <strong><i class="bi bi-clock-history"></i> Última Impressão:</strong>
+          <span class="ms-2">
+            Data: {{ ultimo_evento.date }} | 
+            Usuário: {{ ultimo_evento.user }} | 
+            Impressora: {{ ultimo_evento.printer }} | 
+            Duplex: 
+            {% if ultimo_evento.duplex == 1 %}
+              <span class="badge bg-success">Sim</span>
+            {% elif ultimo_evento.duplex == 0 %}
+              <span class="badge bg-secondary">Não</span>
+            {% else %}
+              <span class="badge bg-warning">Desconhecido</span>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card" data-tooltip="Total de trabalhos de impressão realizados">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h5 class="mb-0"><i class="bi bi-printer"></i> Total Impressões</h5>
+        {% if variacao_impressos %}
+        <span class="badge {% if variacao_impressos > 0 %}bg-success{% elif variacao_impressos < 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+          {% if variacao_impressos > 0 %}<i class="bi bi-arrow-up"></i>{% elif variacao_impressos < 0 %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-dash"></i>{% endif %}
+          {{ variacao_impressos|abs }}%
+        </span>
+        {% endif %}
+      </div>
+      <h3>{{ "{:,}".format(total_impressos|default(0)|int).replace(",", ".") }}</h3>
+      {% if periodo_anterior_impressos %}
+      <small class="text-muted">Período anterior: {{ "{:,}".format(periodo_anterior_impressos|int).replace(",", ".") }}</small>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card secondary" data-tooltip="Total de folhas físicas de papel utilizadas">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h5 class="mb-0"><i class="bi bi-file-text"></i> Total Páginas</h5>
+        {% if variacao_paginas %}
+        <span class="badge {% if variacao_paginas > 0 %}bg-success{% elif variacao_paginas < 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+          {% if variacao_paginas > 0 %}<i class="bi bi-arrow-up"></i>{% elif variacao_paginas < 0 %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-dash"></i>{% endif %}
+          {{ variacao_paginas|abs }}%
+        </span>
+        {% endif %}
+      </div>
+      <h3>{{ "{:,}".format(total_paginas|default(0)|int).replace(",", ".") }}</h3>
+      {% if economia_duplex %}
+      <small class="text-success"><i class="bi bi-leaf"></i> Economia estimada: {{ "{:,}".format(economia_duplex|int).replace(",", ".") }} folhas</small>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card success" data-tooltip="Número de usuários únicos que imprimiram">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Total Usuários</h5>
+        {% if variacao_usuarios %}
+        <span class="badge {% if variacao_usuarios > 0 %}bg-success{% elif variacao_usuarios < 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+          {% if variacao_usuarios > 0 %}<i class="bi bi-arrow-up"></i>{% elif variacao_usuarios < 0 %}<i class="bi bi-arrow-down"></i>{% else %}<i class="bi bi-dash"></i>{% endif %}
+          {{ variacao_usuarios|abs }}%
+        </span>
+        {% endif %}
+      </div>
+      <h3>{{ "{:,}".format(total_usuarios|default(0)|int).replace(",", ".") }}</h3>
+      {% if media_por_usuario %}
+      <small class="text-muted">Média: {{ "{:,}".format(media_por_usuario|int).replace(",", ".") }} páginas/usuário</small>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-3 col-6 mb-3">
+    <div class="stat-card warning" data-tooltip="Taxa de uso de duplex (economia de papel)">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h5 class="mb-0"><i class="bi bi-arrow-left-right"></i> Taxa Duplex</h5>
+        {% if taxa_duplex %}
+        <span class="badge {% if taxa_duplex >= 50 %}bg-success{% elif taxa_duplex >= 30 %}bg-warning{% else %}bg-danger{% endif %}">
+          {{ taxa_duplex|round(1) }}%
+        </span>
+        {% endif %}
+      </div>
+      <h3>{% if taxa_duplex %}{{ taxa_duplex|round(1) }}%{% else %}N/A{% endif %}</h3>
+      {% if economia_duplex %}
+      <small class="text-success"><i class="bi bi-recycle"></i> Economia: {{ "{:,}".format(economia_duplex|int).replace(",", ".") }} folhas</small>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row gy-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Impressões por Setor (Top 5)</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartSetores" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Impressões por Usuário (Top 5)</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartUsuarios" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row gy-4 mt-2">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Impressões Últimos 7 dias</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chart7dias" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+  {% if impressoras_labels and impressoras_labels|length > 0 %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-printer"></i> Top 5 Impressoras</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartImpressoras" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="bi bi-printer" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p class="text-muted mt-3">Nenhum dado de impressora disponível ainda.</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="row gy-4 mt-2">
+  {% if color_modes %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-palette"></i> Páginas por Modo de Cor</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartColorMode" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body text-center">
+        <i class="bi bi-palette" style="font-size: 3rem; opacity: 0.3;"></i>
+        <p class="text-muted mt-3">Aguardando dados de modo de cor.</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Horários de Pico</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartHorarios" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Atividade Recente -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-activity"></i> Atividade Recente</h5>
+      </div>
+      <div class="card-body">
+        <div id="atividade-recente" class="table-responsive">
+          <table class="table table-sm table-modern mb-0">
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Usuário</th>
+                <th>Impressora</th>
+                <th>Páginas</th>
+                <th>Modo</th>
+                <th>Duplex</th>
+              </tr>
+            </thead>
+            <tbody id="atividade-tbody">
+              <tr>
+                <td colspan="6" class="text-center text-muted">
+                  <i class="bi bi-hourglass-split"></i> Carregando atividade recente...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Relatórios Detalhados -->
+<div class="row mt-4">
+  <div class="col-12">
+    <h3 class="mb-4"><i class="bi bi-graph-up"></i> Relatórios Detalhados</h3>
+  </div>
+</div>
+
+<div class="row gy-4">
+  {% if color_report and color_report|length > 0 %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-palette"></i> Impressões por Modo de Cor</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartColor" height="250"></canvas>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm table-modern">
+            <thead>
+              <tr>
+                <th>Modo</th>
+                <th>Impressões</th>
+                <th>Páginas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in color_report %}
+              <tr>
+                <td>
+                  {% if row['color_mode'] == 'Color' %}
+                    <span class="badge bg-danger badge-modern">Color</span>
+                  {% elif row['color_mode'] == 'Black & White' %}
+                    <span class="badge bg-secondary badge-modern">P&B</span>
+                  {% else %}
+                    {{ row['color_mode'] }}
+                  {% endif %}
+                </td>
+                <td>{{ row['total_impressos'] }}</td>
+                <td><strong>{{ row['total_paginas'] }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if paper_report and paper_report|length > 0 %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-file-earmark"></i> Impressões por Tamanho de Papel</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="chartPaper" height="250"></canvas>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm table-modern">
+            <thead>
+              <tr>
+                <th>Tamanho</th>
+                <th>Impressões</th>
+                <th>Páginas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in paper_report %}
+              <tr>
+                <td><strong>{{ row['paper_size'] }}</strong></td>
+                <td>{{ row['total_impressos'] }}</td>
+                <td><strong>{{ row['total_paginas'] }}</strong></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="row mt-4">
+  {% if duplex_report and duplex_report|length > 0 %}
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header bg-transparent border-0 pb-0">
+        <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up"></i> Impressões por Modo Duplex</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <canvas id="chartDuplex" height="300"></canvas>
+          </div>
+          <div class="col-md-6">
+            <div class="table-responsive">
+              <table class="table table-sm table-modern">
+                <thead>
+                  <tr>
+                    <th>Modo Duplex</th>
+                    <th>Impressões</th>
+                    <th>Páginas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in duplex_report %}
+                  <tr>
+                    <td>
+                      {% if row['duplex_mode'] == 'Sim' %}
+                        <span class="badge bg-success badge-modern">Frente e Verso</span>
+                      {% elif row['duplex_mode'] == 'Não' %}
+                        <span class="badge bg-secondary badge-modern">Frente Apenas</span>
+                      {% else %}
+                        {{ row['duplex_mode'] }}
+                      {% endif %}
+                    </td>
+                    <td>{{ row['total_impressos'] }}</td>
+                    <td><strong>{{ row['total_paginas'] }}</strong></td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if alerts and alerts|length > 0 %}
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="alert alert-warning border-0 shadow-sm">
+      <h5 class="mb-3"><i class="bi bi-exclamation-triangle-fill"></i> Alertas de Uso de Cor</h5>
+      <p class="mb-2">Os seguintes dias ultrapassaram o limite configurado:</p>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>% Color</th>
+              <th>Páginas Color</th>
+              <th>Total Páginas</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for alert in alerts %}
+            <tr>
+              <td><strong>{{ alert['date'] }}</strong></td>
+              <td><span class="badge bg-danger">{{ alert['pct_color'] }}%</span></td>
+              <td>{{ alert['pages_color'] }}</td>
+              <td>{{ alert['total_pages'] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+  .btn-outline-modern {
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    transition: all 0.3s ease;
+  }
+  .btn-outline-modern:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    transform: translateY(-2px);
+  }
+  .btn-outline-modern.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+  }
+  .stat-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+  .stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+  .stat-card small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+  #atividade-tbody tr {
+    transition: background-color 0.2s ease;
+  }
+  #atividade-tbody tr:hover {
+    background-color: var(--bg-tertiary);
+  }
+</style>
+<script>
+  /* eslint-disable */
+  // Este arquivo contém código Jinja2 que é processado no servidor
+  // Os avisos do linter são falsos positivos - o código funciona corretamente
+  
+  // Função para animar contadores
+  function animateCounter(element, target, duration = 2000) {
+    const start = 0;
+    const increment = target / (duration / 16);
+    let current = start;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        element.textContent = target.toLocaleString('pt-BR');
+        clearInterval(timer);
+      } else {
+        element.textContent = Math.floor(current).toLocaleString('pt-BR');
+      }
+    }, 16);
+  }
+  
+  // Anima contadores quando visíveis
+  const observerOptions = {
+    threshold: 0.5,
+    rootMargin: '0px'
+  };
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const statCard = entry.target;
+        const numberElement = statCard.querySelector('h3');
+        if (numberElement && !numberElement.dataset.animated) {
+          const targetValue = parseInt(numberElement.textContent.replace(/\D/g, '')) || 0;
+          numberElement.dataset.animated = 'true';
+          animateCounter(numberElement, targetValue);
+        }
+      }
+    });
+  }, observerOptions);
+  
+  // Observa todos os stat-cards
+  document.querySelectorAll('.stat-card').forEach(card => {
+    observer.observe(card);
+  });
+  
+  // Dados dos gráficos
+  // eslint-disable-next-line
+  const setoresLabels = {{ setores_labels|tojson }};
+  // eslint-disable-next-line
+  const setoresValues = {{ setores_values|tojson }};
+  // eslint-disable-next-line
+  const usuariosLabels = {{ usuarios_labels|tojson }};
+  // eslint-disable-next-line
+  const usuariosValues = {{ usuarios_values|tojson }};
+  // eslint-disable-next-line
+  const diasLabels = {{ dias_labels|tojson }};
+  // eslint-disable-next-line
+  const diasValues = {{ dias_values|tojson }};
+  
+  // Debug: verifica se os dados estão disponíveis
+  console.log('Dados dos gráficos:', {
+    setoresLabels: setoresLabels?.length || 0,
+    usuariosLabels: usuariosLabels?.length || 0,
+    diasLabels: diasLabels?.length || 0
+  });
+
+  // Configuração comum para gráficos com animações - Tema Hospitalar
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 2000,
+      easing: 'easeInOutQuart'
+    },
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 15,
+          usePointStyle: true,
+          font: {
+            size: 12,
+            color: 'var(--text-primary)'
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(26, 31, 46, 0.95)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold',
+          color: '#e8eaed'
+        },
+        bodyFont: {
+          size: 13,
+          color: '#e8eaed'
+        },
+        borderColor: 'rgba(74, 144, 226, 0.3)',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            return context.dataset.label + ': ' + context.parsed.y.toLocaleString('pt-BR');
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: 'var(--text-secondary)'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        }
+      },
+      y: {
+        ticks: {
+          color: 'var(--text-secondary)'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        }
+      }
+    }
+  };
+
+  // Gráfico de Setores com animações - Tema Hospitalar
+  const ctxSetores = document.getElementById("chartSetores");
+  if (ctxSetores) {
+    if (setoresLabels && setoresLabels.length > 0 && setoresValues && setoresValues.length > 0) {
+      try {
+        new Chart(ctxSetores.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: setoresLabels,
+        datasets: [{
+          label: "Impressões",
+          data: setoresValues,
+          backgroundColor: setoresValues.map((_, i) => {
+            const colors = [
+              "rgba(74, 144, 226, 0.8)",  // Azul hospitalar
+              "rgba(107, 191, 143, 0.8)",  // Verde suave
+              "rgba(149, 117, 205, 0.8)",  // Roxo suave
+              "rgba(255, 183, 77, 0.8)",   // Amarelo suave
+              "rgba(160, 180, 200, 0.8)"   // Azul acinzentado
+            ];
+            return colors[i % colors.length];
+          }),
+          borderColor: setoresValues.map((_, i) => {
+            const colors = [
+              "rgba(74, 144, 226, 1)",
+              "rgba(107, 191, 143, 1)",
+              "rgba(149, 117, 205, 1)",
+              "rgba(255, 183, 77, 1)",
+              "rgba(160, 180, 200, 1)"
+            ];
+            return colors[i % colors.length];
+          }),
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartOptions,
+        animation: {
+          ...chartOptions.animation,
+          onComplete: () => {
+            // Efeito de pulso após animação
+            ctxSetores.style.transition = 'transform 0.3s';
+          }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR');
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        }
+      }
+    });
+      } catch (error) {
+        console.error('Erro ao criar gráfico de setores:', error);
+      }
+    } else {
+      console.warn('Dados de setores insuficientes para criar gráfico');
+    }
+  }
+
+  // Gráfico de Usuários com animações - Tema Hospitalar
+  const ctxUsuarios = document.getElementById("chartUsuarios");
+  if (ctxUsuarios) {
+    if (usuariosLabels && usuariosLabels.length > 0 && usuariosValues && usuariosValues.length > 0) {
+      try {
+        new Chart(ctxUsuarios.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: usuariosLabels,
+        datasets: [{
+          label: "Impressões",
+          data: usuariosValues,
+          backgroundColor: "rgba(74, 144, 226, 0.8)",
+          borderColor: "rgba(74, 144, 226, 1)",
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartOptions,
+        scales: {
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR');
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+      } catch (error) {
+        console.error('Erro ao criar gráfico de usuários:', error);
+      }
+    } else {
+      console.warn('Dados de usuários insuficientes para criar gráfico');
+    }
+  }
+
+  // Gráfico dos últimos 7 dias com animações - Tema Hospitalar
+  const ctx7dias = document.getElementById("chart7dias");
+  if (ctx7dias) {
+    if (diasLabels && diasLabels.length > 0 && diasValues && diasValues.length > 0) {
+      try {
+        new Chart(ctx7dias.getContext("2d"), {
+      type: "line",
+      data: {
+        labels: diasLabels,
+        datasets: [{
+          label: "Impressões",
+          data: diasValues,
+          fill: true,
+          borderColor: "rgba(74, 144, 226, 1)",
+          backgroundColor: "rgba(74, 144, 226, 0.15)",
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          pointBackgroundColor: "rgba(74, 144, 226, 1)",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: "#fff",
+          pointHoverBorderColor: "rgba(74, 144, 226, 1)",
+          pointHoverBorderWidth: 3
+        }]
+      },
+      options: {
+        ...chartOptions,
+        animation: {
+          ...chartOptions.animation,
+          duration: 2500
+        },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR');
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        },
+        plugins: {
+          ...chartOptions.plugins,
+          filler: {
+            propagate: false
+          }
+        }
+      }
+    });
+      } catch (error) {
+        console.error('Erro ao criar gráfico de 7 dias:', error);
+      }
+    } else {
+      console.warn('Dados de 7 dias insuficientes para criar gráfico');
+    }
+  }
+
+  {% if impressoras_labels and impressoras_labels|length > 0 %}
+  // eslint-disable-next-line
+  const impressorasLabelsData = {{ impressoras_labels|tojson }};
+  // eslint-disable-next-line
+  const impressorasValuesData = {{ impressoras_values|tojson }};
+  const ctxImpressoras = document.getElementById("chartImpressoras");
+  if (ctxImpressoras && impressorasLabelsData && impressorasLabelsData.length > 0) {
+    new Chart(ctxImpressoras.getContext("2d"), {
+      type: "doughnut",
+      data: {
+        labels: impressorasLabelsData,
+        datasets: [{
+          data: impressorasValuesData,
+          backgroundColor: [
+            "rgba(74, 144, 226, 0.8)",   // Azul hospitalar
+            "rgba(107, 191, 143, 0.8)",   // Verde suave
+            "rgba(149, 117, 205, 0.8)",   // Roxo suave
+            "rgba(160, 180, 200, 0.8)",   // Azul acinzentado
+            "rgba(255, 183, 77, 0.8)"     // Amarelo suave
+          ],
+          borderWidth: 3,
+          borderColor: "var(--bg-primary)"
+        }]
+      },
+      options: {
+        ...chartOptions,
+        cutout: '60%',
+        animation: {
+          ...chartOptions.animation,
+          animateRotate: true,
+          animateScale: true
+        }
+      }
+    });
+  }
+  {% endif %}
+
+  {% if color_modes and color_modes|length > 0 %}
+  // eslint-disable-next-line
+  const colorModesData = {{ color_modes|tojson }};
+  // eslint-disable-next-line
+  const colorPagesData = {{ color_pages|tojson }};
+  const ctxColorMode = document.getElementById("chartColorMode");
+  if (ctxColorMode && colorModesData && colorModesData.length > 0) {
+    new Chart(ctxColorMode.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: colorModesData,
+        datasets: [{
+          label: "Páginas",
+          data: colorPagesData,
+          backgroundColor: colorModesData.map(mode => 
+            mode === 'Color' ? "rgba(229, 115, 115, 0.8)" : "rgba(160, 180, 200, 0.8)"
+          ),
+          borderColor: colorModesData.map(mode => 
+            mode === 'Color' ? "rgba(229, 115, 115, 1)" : "rgba(160, 180, 200, 1)"
+          ),
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartOptions,
+        scales: {
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR');
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Gráfico de Horários de Pico
+  fetch('/api/analise/horarios?dias=30')
+    .then(response => response.json())
+    .then(data => {
+      const ctxHorarios = document.getElementById("chartHorarios");
+      if (ctxHorarios && data && data.horarios && data.horarios.length > 0) {
+        const labels = data.horarios.map(h => h.hora + ':00');
+        const valores = data.horarios.map(h => h.total);
+        
+        new Chart(ctxHorarios.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Impressões",
+              data: valores,
+              backgroundColor: valores.map((v, i) => {
+                const max = Math.max(...valores);
+                const intensity = v / max;
+                return `rgba(74, 144, 226, ${0.4 + intensity * 0.4})`;
+              }),
+              borderColor: "rgba(74, 144, 226, 1)",
+              borderWidth: 2,
+              borderRadius: 6,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            ...chartOptions,
+            scales: {
+              y: { 
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return value.toLocaleString('pt-BR');
+                  }
+                },
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.05)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+      } else {
+        // Se não houver dados, mostra mensagem
+        const ctxHorarios = document.getElementById("chartHorarios");
+        if (ctxHorarios) {
+          ctxHorarios.parentElement.innerHTML = '<div class="text-center text-muted p-4"><i class="bi bi-hourglass-split"></i> Aguardando dados de horários...</div>';
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao carregar horários de pico:', error);
+    });
+  {% endif %}
+
+  // Carrega atividade recente
+  fetch('/api/dashboard/atividade-recente?limit=10')
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById('atividade-tbody');
+      if (tbody && data && data.length > 0) {
+        tbody.innerHTML = data.map(evento => `
+          <tr>
+            <td>${evento.date || 'N/A'}</td>
+            <td><strong>${evento.user || 'N/A'}</strong></td>
+            <td>${evento.printer_name || 'N/A'}</td>
+            <td><span class="badge bg-primary">${evento.sheets_used || 0}</span></td>
+            <td>
+              ${evento.color_mode === 'Color' ? '<span class="badge bg-danger">Color</span>' : 
+                evento.color_mode === 'Black & White' ? '<span class="badge bg-secondary">P&B</span>' : 
+                '<span class="badge bg-secondary">N/A</span>'}
+            </td>
+            <td>
+              ${evento.duplex === 1 ? '<span class="badge bg-success"><i class="bi bi-check"></i> Sim</span>' : 
+                evento.duplex === 0 ? '<span class="badge bg-secondary"><i class="bi bi-x"></i> Não</span>' : 
+                '<span class="badge bg-warning">N/A</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } else if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted"><i class="bi bi-inbox"></i> Nenhuma atividade recente</td></tr>';
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao carregar atividade recente:', error);
+      const tbody = document.getElementById('atividade-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger"><i class="bi bi-exclamation-triangle"></i> Erro ao carregar atividade</td></tr>';
+      }
+    });
+
+  // Gráficos de Relatórios Detalhados - Tema Hospitalar
+  {% if color_report and color_report|length > 0 %}
+  const colorLabels = [];
+  const colorData = [];
+  {% for row in color_report %}
+  // eslint-disable-next-line
+  colorLabels.push({{ row['color_mode']|tojson }});
+  // eslint-disable-next-line
+  colorData.push({{ row['total_paginas'] }});
+  {% endfor %}
+  const ctxColor = document.getElementById("chartColor");
+  if (ctxColor && colorLabels.length > 0) {
+    new Chart(ctxColor.getContext("2d"), {
+      type: "doughnut",
+      data: {
+        labels: colorLabels,
+        datasets: [{
+          data: colorData,
+          backgroundColor: colorLabels.map(label => 
+            label === 'Color' ? "rgba(229, 115, 115, 0.8)" : 
+            label === 'Black & White' ? "rgba(160, 180, 200, 0.8)" : 
+            "rgba(74, 144, 226, 0.8)"
+          ),
+          borderWidth: 3,
+          borderColor: "var(--bg-primary)",
+          hoverBorderWidth: 5,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        ...chartOptions,
+        cutout: '60%',
+        animation: {
+          ...chartOptions.animation,
+          animateRotate: true,
+          animateScale: true
+        },
+        plugins: {
+          ...chartOptions.plugins,
+          tooltip: {
+            ...chartOptions.plugins.tooltip,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value.toLocaleString('pt-BR')} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+  {% endif %}
+
+  {% if paper_report and paper_report|length > 0 %}
+  const paperLabels = [];
+  const paperData = [];
+  {% for row in paper_report %}
+  // eslint-disable-next-line
+  paperLabels.push({{ row['paper_size']|tojson }});
+  // eslint-disable-next-line
+  paperData.push({{ row['total_paginas'] }});
+  {% endfor %}
+  const ctxPaper = document.getElementById("chartPaper");
+  if (ctxPaper && paperLabels.length > 0) {
+    const colors = [
+      "rgba(74, 144, 226, 0.8)",   // Azul hospitalar
+      "rgba(107, 191, 143, 0.8)",   // Verde suave
+      "rgba(149, 117, 205, 0.8)",   // Roxo suave
+      "rgba(160, 180, 200, 0.8)",   // Azul acinzentado
+      "rgba(255, 183, 77, 0.8)"     // Amarelo suave
+    ];
+    new Chart(ctxPaper.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: paperLabels,
+        datasets: [{
+          label: "Páginas",
+          data: paperData,
+          backgroundColor: paperData.map((_, i) => colors[i % colors.length]),
+          borderColor: paperData.map((_, i) => colors[i % colors.length].replace('0.8', '1')),
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...chartOptions,
+        scales: {
+          y: { 
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return value.toLocaleString('pt-BR');
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  }
+  {% endif %}
+
+  {% if duplex_report and duplex_report|length > 0 %}
+  const duplexLabels = [];
+  const duplexData = [];
+  {% for row in duplex_report %}
+  // eslint-disable-next-line
+  duplexLabels.push({{ row['duplex_mode']|tojson }});
+  // eslint-disable-next-line
+  duplexData.push({{ row['total_paginas'] }});
+  {% endfor %}
+  const ctxDuplex = document.getElementById("chartDuplex");
+  if (ctxDuplex && duplexLabels.length > 0) {
+    new Chart(ctxDuplex.getContext("2d"), {
+      type: "pie",
+      data: {
+        labels: duplexLabels,
+        datasets: [{
+          data: duplexData,
+          backgroundColor: [
+            "rgba(107, 191, 143, 0.8)",   // Verde suave
+            "rgba(160, 180, 200, 0.8)",   // Azul acinzentado
+            "rgba(255, 183, 77, 0.8)"     // Amarelo suave
+          ],
+          borderWidth: 3,
+          borderColor: "var(--bg-primary)",
+          hoverBorderWidth: 5,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        ...chartOptions,
+        animation: {
+          ...chartOptions.animation,
+          animateRotate: true,
+          animateScale: true
+        },
+        plugins: {
+          ...chartOptions.plugins,
+          tooltip: {
+            ...chartOptions.plugins.tooltip,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value.toLocaleString('pt-BR')} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+  {% endif %}
+  
+  // Adiciona efeito de parallax sutil nos cards
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = (y - centerY) / 20;
+      const rotateY = (centerX - x) / 20;
+      
+      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-3px)`;
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+  
+  // Adiciona animação de entrada para elementos
+  const fadeObserverOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+  };
+  
+  const fadeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        fadeObserver.unobserve(entry.target);
+      }
+    });
+  }, fadeObserverOptions);
+  
+  // Observa cards e tabelas
+  document.querySelectorAll('.card, .table-modern').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    fadeObserver.observe(el);
+  });
+  /* eslint-enable */
+</script>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Heatmaps de Uso - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-grid-3x3-gap"></i> Heatmaps de Uso</h2>
+  <p class="text-muted">Visualize padrões de uso de impressões</p>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <label>Período (dias)</label>
+        <input type="number" class="form-control" id="periodo-dias" value="30" min="7" max="365">
+      </div>
+      <div class="col-md-4">
+        <label>Tipo de Heatmap</label>
+        <select class="form-control" id="tipo-heatmap">
+          <option value="horarios">Horários do Dia</option>
+          <option value="setores">Setores</option>
+          <option value="semanal">Dias da Semana</option>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <button class="btn btn-primary btn-modern w-100" onclick="carregarHeatmap()">
+          <i class="bi bi-arrow-clockwise"></i> Carregar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Heatmap de Horários -->
+<div class="card mb-4" id="card-horarios">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-clock"></i> Heatmap de Horários</h5>
+  </div>
+  <div class="card-body">
+    <canvas id="chart-horarios" height="100"></canvas>
+  </div>
+</div>
+
+<!-- Heatmap de Setores -->
+<div class="card mb-4" id="card-setores">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-building"></i> Heatmap de Setores</h5>
+  </div>
+  <div class="card-body">
+    <canvas id="chart-setores" height="100"></canvas>
+  </div>
+</div>
+
+<!-- Heatmap Semanal -->
+<div class="card" id="card-semanal">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Heatmap Semanal</h5>
+  </div>
+  <div class="card-body">
+    <canvas id="chart-semanal" height="100"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let charts = {};
+
+async function carregarHeatmap() {
+  const tipo = document.getElementById('tipo-heatmap').value;
+  const dias = document.getElementById('periodo-dias').value;
+  
+  // Esconde todos os cards
+  document.getElementById('card-horarios').style.display = 'none';
+  document.getElementById('card-setores').style.display = 'none';
+  document.getElementById('card-semanal').style.display = 'none';
+  
+  try {
+    let url, canvasId, cardId;
+    
+    if (tipo === 'horarios') {
+      url = `/api/heatmap/horarios?dias=${dias}`;
+      canvasId = 'chart-horarios';
+      cardId = 'card-horarios';
+    } else if (tipo === 'setores') {
+      url = `/api/heatmap/setores?dias=${dias}`;
+      canvasId = 'chart-setores';
+      cardId = 'card-setores';
+    } else {
+      url = `/api/heatmap/semanal?semanas=${Math.ceil(dias/7)}`;
+      canvasId = 'chart-semanal';
+      cardId = 'card-semanal';
+    }
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.error) {
+      alert('Erro: ' + data.error);
+      return;
+    }
+    
+    // Destrói gráfico anterior se existir
+    if (charts[canvasId]) {
+      charts[canvasId].destroy();
+    }
+    
+    // Mostra o card
+    document.getElementById(cardId).style.display = 'block';
+    
+    // Cria novo gráfico
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    charts[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels || [],
+        datasets: [{
+          label: 'Impressões',
+          data: data.values || [],
+          backgroundColor: 'rgba(74, 144, 226, 0.8)',
+          borderColor: 'rgba(74, 144, 226, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  } catch (error) {
+    alert('Erro ao carregar heatmap: ' + error);
+  }
+}
+
+// Carrega heatmap inicial
+document.addEventListener('DOMContentLoaded', function() {
+  carregarHeatmap();
+});
+</script>
+{% endblock %}
+

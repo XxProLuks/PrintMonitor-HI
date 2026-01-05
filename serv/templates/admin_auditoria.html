@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Admin - Auditoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-shield-check"></i> Log de Auditoria</h2>
+  <p class="text-muted">Registro de todas as ações realizadas no sistema</p>
+</div>
+
+<div class="filter-card mb-4">
+  <form method="GET" class="row g-3">
+    <div class="col-md-3">
+      <label class="form-label">Usuário</label>
+      <input type="text" name="usuario" class="form-control" value="{{ request.args.get('usuario', '') }}" placeholder="Filtrar por usuário">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Ação</label>
+      <input type="text" name="acao" class="form-control" value="{{ request.args.get('acao', '') }}" placeholder="Filtrar por ação">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Tabela</label>
+      <input type="text" name="tabela" class="form-control" value="{{ request.args.get('tabela', '') }}" placeholder="Filtrar por tabela">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">&nbsp;</label>
+      <button type="submit" class="btn btn-modern w-100">
+        <i class="bi bi-search"></i> Filtrar
+      </button>
+    </div>
+  </form>
+</div>
+
+{% if registros %}
+<div class="table-responsive">
+  <table class="table table-modern">
+    <thead>
+      <tr>
+        <th>Data/Hora</th>
+        <th>Usuário</th>
+        <th>Ação</th>
+        <th>Tabela</th>
+        <th>Registro ID</th>
+        <th>IP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for registro in registros %}
+      <tr>
+        <td>{{ registro.created_at[:19] if registro.created_at else 'N/A' }}</td>
+        <td><strong>{{ registro.usuario }}</strong></td>
+        <td>
+          <span class="badge bg-primary badge-modern">{{ registro.acao }}</span>
+        </td>
+        <td>{{ registro.tabela or '-' }}</td>
+        <td>{{ registro.registro_id or '-' }}</td>
+        <td>{{ registro.ip_address or '-' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+  <i class="bi bi-info-circle"></i> Nenhum registro de auditoria encontrado.
+</div>
+{% endif %}
+{% endblock %}
+

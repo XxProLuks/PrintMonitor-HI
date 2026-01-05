@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Script de teste para verificar se a rota /admin/impressoras está funcionando
+"""
+
+import sys
+import os
+
+# Adiciona o diretório raiz ao path para importar serv.servidor
+base_dir = os.path.dirname(os.path.abspath(__file__))
+if base_dir not in sys.path:
+    sys.path.insert(0, base_dir)
+
+def test_admin_impressoras():
+    """Testa a rota /admin/impressoras"""
+    try:
+        from serv.servidor import app
+        
+        print("="*70)
+        print("TESTE: /admin/impressoras")
+        print("="*70)
+        print()
+        
+        # Cria cliente de teste
+        with app.test_client() as client:
+            print("1. Testando sem login (deve redirecionar)...")
+            response = client.get('/admin/impressoras')
+            print(f"   Status: {response.status_code}")
+            if response.status_code == 302:
+                print("   ✅ Redirecionamento correto (não logado)")
+            else:
+                print(f"   ⚠️  Status inesperado: {response.status_code}")
+            print()
+            
+            print("2. Testando com login mas sem admin (deve negar acesso)...")
+            with client.session_transaction() as sess:
+                sess['logged_in'] = True
+                sess['is_admin'] = False
+                sess['username'] = 'test_user'
+            
+            response = client.get('/admin/impressoras')
+            print(f"   Status: {response.status_code}")
+            if response.status_code == 403:
+                print("   ✅ Acesso negado corretamente (não é admin)")
+            else:
+                print(f"   ⚠️  Status inesperado: {response.status_code}")
+            print()
+            
+            print("3. Testando com login e admin (deve funcionar)...")
+            with client.session_transaction() as sess:
+                sess['logged_in'] = True
+                sess['is_admin'] = True
+                sess['username'] = 'admin'
+            
+            response = client.get('/admin/impressoras')
+            print(f"   Status: {response.status_code}")
+            if response.status_code == 200:
+                print("   ✅ Rota funcionando corretamente!")
+                print(f"   Tamanho da resposta: {len(response.data)} bytes")
+            else:
+                print(f"   ❌ Erro: Status {response.status_code}")
+                print(f"   Resposta: {response.data[:500]}")
+            print()
+            
+            print("4. Verificando template...")
+            # Verifica se o template foi renderizado (usando encode para caracteres não-ASCII)
+            template_indicators = [
+                'Administração de Impressoras'.encode('utf-8'),
+                b'admin_impressoras',
+                b'Impressoras',
+                b'printer'
+            ]
+            if any(indicator in response.data for indicator in template_indicators):
+                print("   ✅ Template carregado corretamente")
+            else:
+                print("   ⚠️  Template pode não estar sendo renderizado")
+            print()
+            
+    except ImportError as e:
+        print(f"❌ Erro ao importar: {e}")
+        print("   Certifique-se de estar no diretório correto")
+        return False
+    except Exception as e:
+        print(f"❌ Erro durante teste: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    
+    print("="*70)
+    print("TESTE CONCLUÍDO")
+    print("="*70)
+    return True
+
+if __name__ == "__main__":
+    success = test_admin_impressoras()
+    sys.exit(0 if success else 1)
+

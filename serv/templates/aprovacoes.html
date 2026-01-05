@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Aprovações Pendentes - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-check-circle"></i> Aprovações Pendentes</h2>
+  <p class="text-muted">Gerencie impressões que requerem aprovação</p>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="bi bi-list-check"></i> Fila de Aprovações</h5>
+    <span class="badge bg-warning" id="contador-pendentes">{{ aprovacoes|length }} pendente(s)</span>
+  </div>
+  <div class="card-body">
+    {% if aprovacoes %}
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Usuário</th>
+            <th>Impressora</th>
+            <th>Páginas</th>
+            <th>Valor</th>
+            <th>Motivo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for aprovacao in aprovacoes %}
+          <tr>
+            <td>{{ aprovacao.evento.date if aprovacao.evento else 'N/A' }}</td>
+            <td><strong>{{ aprovacao.usuario }}</strong></td>
+            <td>{{ aprovacao.evento.printer if aprovacao.evento else 'N/A' }}</td>
+            <td>{{ aprovacao.evento.pages if aprovacao.evento else 'N/A' }}</td>
+            <td>R$ {{ "%.2f"|format(aprovacao.valor) }}</td>
+            <td><small>{{ aprovacao.motivo }}</small></td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="aprovar({{ aprovacao.id }})">
+                <i class="bi bi-check"></i> Aprovar
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="rejeitar({{ aprovacao.id }})">
+                <i class="bi bi-x"></i> Rejeitar
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem; opacity: 0.3;"></i>
+      <p class="text-muted mt-3">Nenhuma aprovação pendente.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal para rejeitar -->
+<div class="modal fade" id="modalRejeitar" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rejeitar Impressão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="motivo-rejeicao">Motivo da Rejeição</label>
+          <textarea class="form-control" id="motivo-rejeicao" rows="3" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" onclick="confirmarRejeitar()">Rejeitar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let aprovacaoAtual = null;
+
+async function aprovar(id) {
+  if (!confirm('Deseja aprovar esta impressão?')) return;
+  
+  try {
+    const response = await fetch('/api/aprovacoes/aprovar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: id})
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+      location.reload();
+    } else {
+      alert('Erro ao aprovar: ' + data.error);
+    }
+  } catch (error) {
+    alert('Erro ao aprovar: ' + error);
+  }
+}
+
+function rejeitar(id) {
+  aprovacaoAtual = id;
+  const modal = new bootstrap.Modal(document.getElementById('modalRejeitar'));
+  modal.show();
+}
+
+async function confirmarRejeitar() {
+  const motivo = document.getElementById('motivo-rejeicao').value;
+  if (!motivo.trim()) {
+    alert('Por favor, informe o motivo da rejeição');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/aprovacoes/rejeitar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: aprovacaoAtual, motivo: motivo})
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+      location.reload();
+    } else {
+      alert('Erro ao rejeitar: ' + data.error);
+    }
+  } catch (error) {
+    alert('Erro ao rejeitar: ' + error);
+  }
+}
+</script>
+{% endblock %}
+

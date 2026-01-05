@@ -1,0 +1,43 @@
+[Unit]
+Description=Print Monitor Server - Sistema de Monitoramento de Impressões
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/app/serv
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/app/.env
+
+# Configurações do Gunicorn
+ExecStart=/usr/local/bin/gunicorn \
+    --bind 0.0.0.0:5002 \
+    --workers 4 \
+    --threads 2 \
+    --timeout 120 \
+    --worker-class gthread \
+    --access-logfile /var/log/print-monitor/access.log \
+    --error-logfile /var/log/print-monitor/error.log \
+    --log-level info \
+    --preload \
+    servidor:app
+
+# Reiniciar automaticamente em caso de falha
+Restart=always
+RestartSec=10
+
+# Limites de recursos
+LimitNOFILE=65535
+LimitNPROC=4096
+
+# Segurança
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/app/serv/print_events.db /app/serv/backups /var/log/print-monitor
+
+[Install]
+WantedBy=multi-user.target
+

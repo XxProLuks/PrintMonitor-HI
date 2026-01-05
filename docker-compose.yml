@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  servidor:
+    build: .
+    container_name: print-monitor-server
+    ports:
+      - "5002:5002"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-chave-super-secreta-alterar}
+      - DB_NAME=print_events.db
+      - HOST=0.0.0.0
+      - PORT=5002
+      - DEBUG=False
+    volumes:
+      - ./serv/print_events.db:/app/serv/print_events.db
+      - ./serv/logs:/app/serv/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Agente (opcional - pode rodar separadamente)
+  # agente:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.agent
+  #   container_name: print-monitor-agent
+  #   volumes:
+  #     - ./agent:/app/agent
+  #   restart: unless-stopped
+  #   privileged: true  # Necessário para acesso ao Event Log do Windows
+

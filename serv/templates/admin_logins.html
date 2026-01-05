@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Admin Logins - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-person-lock"></i> Administração de Logins</h2>
+</div>
+
+{% if message %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  <i class="bi bi-info-circle"></i> {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Usuários Cadastrados</h5>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-modern">
+        <thead>
+          <tr>
+            <th><i class="bi bi-person"></i> Usuário</th>
+            <th><i class="bi bi-shield-check"></i> Administrador</th>
+            <th><i class="bi bi-key"></i> Código de Recuperação</th>
+            <th><i class="bi bi-gear"></i> Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user_data in usuarios %}
+          <tr>
+            <td><strong>{{ user_data.username }}</strong></td>
+            <td>
+              {% if user_data.is_admin %}
+                <span class="badge bg-danger badge-modern">Sim</span>
+              {% else %}
+                <span class="badge bg-secondary badge-modern">Não</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user_data.token_ativo %}
+                <div class="d-flex align-items-center gap-2">
+                  <code style="font-size: 0.9rem; background: #f8f9fa; padding: 5px 10px; border-radius: 5px; font-weight: bold; color: #667eea;">
+                    {{ user_data.token_ativo[:4] }}-{{ user_data.token_ativo[4:8] }}-{{ user_data.token_ativo[8:] }}
+                  </code>
+                  <button 
+                    type="button" 
+                    class="btn btn-sm btn-outline-primary" 
+                    onclick="copiarCodigo('{{ user_data.token_ativo }}', '{{ user_data.username }}')"
+                    title="Copiar código"
+                  >
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+              {% else %}
+                <span class="text-muted" style="font-size: 0.85rem;">
+                  <i class="bi bi-dash-circle"></i> Nenhum código ativo
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" class="d-flex gap-2 align-items-center flex-wrap">
+                {% if CSRF_ENABLED %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {% endif %}
+                <input type="hidden" name="username" value="{{ user_data.username }}" />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Nova senha"
+                  class="form-control form-control-sm"
+                  style="max-width: 200px;"
+                  required
+                />
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="is_admin"
+                    id="adminSwitch_{{ loop.index }}"
+                    {% if user_data.is_admin %}checked{% endif %}
+                  />
+                  <label class="form-check-label" for="adminSwitch_{{ loop.index }}">
+                    Admin
+                  </label>
+                </div>
+                <button type="submit" name="action" value="edit" class="btn btn-success btn-sm btn-modern">
+                  <i class="bi bi-check-circle"></i> Atualizar
+                </button>
+                <button 
+                  type="submit" 
+                  name="action" 
+                  value="gerar_codigo" 
+                  class="btn btn-warning btn-sm btn-modern"
+                  title="Gerar código de recuperação de senha"
+                >
+                  <i class="bi bi-key"></i> Gerar Código
+                </button>
+                {% if user_data.username != 'admin' %}
+                <button
+                  type="submit"
+                  name="action"
+                  value="delete"
+                  class="btn btn-danger btn-sm btn-modern"
+                  onclick="return confirm('Confirma exclusão do usuário {{ user_data.username }}?')"
+                >
+                  <i class="bi bi-trash"></i> Excluir
+                </button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="text-center py-5">
+              <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+              <p class="text-muted mt-3">Nenhum usuário cadastrado.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-transparent border-0">
+    <h5 class="mb-0"><i class="bi bi-person-plus"></i> Adicionar Novo Usuário</h5>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3 align-items-end">
+      {% if CSRF_ENABLED %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {% endif %}
+      <input type="hidden" name="action" value="add" />
+      <div class="col-md-4">
+        <label class="form-label"><i class="bi bi-person"></i> Usuário</label>
+        <input
+          type="text"
+          name="username"
+          placeholder="Digite o nome de usuário"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="col-md-4">
+        <label class="form-label"><i class="bi bi-lock"></i> Senha</label>
+        <input
+          type="password"
+          name="password"
+          placeholder="Digite a senha"
+          class="form-control"
+          required
+        />
+      </div>
+      <div class="col-md-2">
+        <div class="form-check form-switch">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            name="is_admin"
+            id="isAdminNewUser"
+          />
+          <label class="form-check-label" for="isAdminNewUser">
+            <i class="bi bi-shield-check"></i> Admin
+          </label>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary btn-modern w-100">
+          <i class="bi bi-plus-circle"></i> Adicionar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function copiarCodigo(token, username) {
+    // Garante que o token está limpo (sem hífens, apenas letras e números)
+    const tokenLimpo = token.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    
+    // Copia o token limpo
+    navigator.clipboard.writeText(tokenLimpo).then(function() {
+      // Mostra feedback visual
+      const btn = event.target.closest('button');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check"></i>';
+      btn.classList.remove('btn-outline-primary');
+      btn.classList.add('btn-success');
+      
+      setTimeout(function() {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-primary');
+      }, 2000);
+    }).catch(function() {
+      // Fallback: mostra o código em um prompt
+      prompt('Copie o código abaixo:', tokenLimpo);
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,1677 @@
+{
+  "meta": {
+    "project": "Print Monitor",
+    "date": "2025-11-04",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Print Monitor is a comprehensive corporate print monitoring system designed for Windows environments. It captures real-time print events, analyzes usage patterns, manages quotas, budgets, and goals, and provides intelligent alerts and AI-powered insights to optimize printing resources and reduce costs.",
+  "core_goals": [
+    "Enable real-time capture and monitoring of print events using Windows PowerShell, WMI, and Event Log.",
+    "Provide a modern, interactive web dashboard for visualization of printing statistics and trends.",
+    "Support detailed management of users, printers, and organizational sectors with cost calculations.",
+    "Implement advanced analysis features including comparative periods, heatmaps, and anomaly detection.",
+    "Offer robust quota, goals, and budget management to control printing usage and expenses.",
+    "Integrate AI capabilities for cost prediction, anomaly detection, optimization recommendations, and intelligent alerts.",
+    "Provide a complete REST API for system integration and automation.",
+    "Ensure system security with user authentication, session management, audit logs, and automated backups.",
+    "Support export of data and reports in multiple formats (CSV, Excel, PDF, PNG).",
+    "Encourage collaboration and engagement through comments, filters, approvals, and gamification."
+  ],
+  "key_features": [
+    "Real-time print event capture and recording from Windows environments.",
+    "Comprehensive web dashboard with customizable widgets and graphical reports.",
+    "User, sector, and printer management interfaces with statistics and Excel export.",
+    "Period comparison tools for monthly, quarterly, and custom intervals.",
+    "Quota, goals, and budget modules with administrative pages.",
+    "Alert and notification system with intelligent AI-powered alerts.",
+    "Suggestion system for print cost reduction including duplex and black & white modes.",
+    "Commenting and tagging system for print events to enhance collaboration.",
+    "Saved filters feature for reusing search criteria efficiently.",
+    "Approval workflow for print jobs requiring authorization before execution.",
+    "Heatmaps to visualize usage patterns by time, sector, and week day.",
+    "Gamification system featuring points, badges, and rankings to motivate users.",
+    "Advanced export capabilities supporting CSV, Excel, PDF, and graphical image formats.",
+    "Comprehensive administrative features for configuration, audit, backup, and pricing setup.",
+    "Robust authentication and password recovery mechanisms."
+  ],
+  "user_flow_summary": [
+    "User logs into the web system via a secure login page and session management.",
+    "User accesses the interactive dashboard to monitor print statistics and system health.",
+    "Admin users manage users, printers, sectors, quotas, goals, and budget via dedicated admin pages.",
+    "Users view or export reports by user, sector, or printer with options for comparative periods.",
+    "Users receive, view, and manage alerts and suggestions, including AI-generated insights.",
+    "Users collaborate by adding comments and tags to print events and saving reusable filters.",
+    "Print jobs are submitted and optionally require approval; authorized jobs proceed, others can be rejected with reason.",
+    "Users navigate heatmaps and gamification pages to visualize usage and engage competitively.",
+    "System administrators perform backups, audit logs, and configure system pricing and settings.",
+    "Developers and integrators interact with the REST API to automate workflows and retrieve data programmatically."
+  ],
+  "validation_criteria": [
+    "System must successfully capture and store all print events in real-time without loss or delay.",
+    "Dashboard pages and API endpoints must return correct and consistent statistics and trends data.",
+    "User authentication must enforce session management and securely restrict access.",
+    "Quotas, goals, and budget functionalities must enforce limits and track compliance accurately.",
+    "AI modules must generate predictions, alerts, and recommendations consistent with input data.",
+    "Export functions must produce correctly formatted CSV, Excel, PDF, and PNG files.",
+    "Administrative actions (user creation, backup, pricing update) must be logged and auditable.",
+    "Approval system must only allow authorized print jobs to proceed and track rejection reasons.",
+    "Alerts and suggestions must trigger based on defined criteria and AI pattern analysis.",
+    "REST API endpoints must conform to OpenAPI 3.0 specs, respond with expected data, and handle errors gracefully."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "Python",
+      "Flask",
+      "SQLite",
+      "Jinja2",
+      "Pandas",
+      "OpenAI",
+      "scikit-learn",
+      "Windows Event Log",
+      "WMI",
+      "PowerShell"
+    ],
+    "features": [
+      {
+        "name": "Login",
+        "description": "Sistema de autenticação de usuários com sessão",
+        "files": [
+          "serv/servidor.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/login": {
+              "post": {
+                "summary": "Fazer login no sistema",
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Login bem-sucedido"
+                  },
+                  "401": {
+                    "description": "Credenciais inválidas"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Dashboard",
+        "description": "Dashboard principal com estatísticas e gráficos em tempo real",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/dashboard.html",
+          "serv/modules/dashboard_widgets.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/dashboard": {
+              "get": {
+                "summary": "Página do dashboard",
+                "responses": {
+                  "200": {
+                    "description": "Dashboard renderizado"
+                  }
+                }
+              }
+            },
+            "/api/v1/stats": {
+              "get": {
+                "summary": "Estatísticas gerais do sistema",
+                "responses": {
+                  "200": {
+                    "description": "Estatísticas em JSON"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Eventos de Impressão",
+        "description": "API para gerenciar eventos de impressão capturados pelo agente",
+        "files": [
+          "serv/servidor.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/print_events": {
+              "post": {
+                "summary": "Criar novo evento de impressão",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "user": {
+                            "type": "string"
+                          },
+                          "printer_name": {
+                            "type": "string"
+                          },
+                          "pages": {
+                            "type": "integer"
+                          },
+                          "color": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/v1/events": {
+              "get": {
+                "summary": "Listar eventos de impressão",
+                "parameters": [
+                  {
+                    "name": "start_date",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "end_date",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "user",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "printer",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  },
+                  {
+                    "name": "offset",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista de eventos"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Usuários",
+        "description": "Gestão de usuários do sistema",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/usuarios.html",
+          "serv/templates/admin_usuarios.html"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/usuarios": {
+              "get": {
+                "summary": "Lista de usuários com estatísticas",
+                "responses": {
+                  "200": {
+                    "description": "Página de usuários"
+                  }
+                }
+              }
+            },
+            "/admin/usuarios": {
+              "get": {
+                "summary": "Administração de usuários",
+                "responses": {
+                  "200": {
+                    "description": "Página de administração"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar ou atualizar usuário",
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "username": {
+                            "type": "string"
+                          },
+                          "password": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/usuarios/export": {
+              "get": {
+                "summary": "Exportar relatório de usuários para Excel",
+                "responses": {
+                  "200": {
+                    "description": "Arquivo Excel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Setores",
+        "description": "Estatísticas e gestão por setores",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/setores.html"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/setores": {
+              "get": {
+                "summary": "Estatísticas por setor",
+                "responses": {
+                  "200": {
+                    "description": "Página de setores"
+                  }
+                }
+              }
+            },
+            "/setores/export": {
+              "get": {
+                "summary": "Exportar relatório de setores",
+                "responses": {
+                  "200": {
+                    "description": "Arquivo Excel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Impressoras",
+        "description": "Gestão e estatísticas de impressoras",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/impressoras.html"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/impressoras": {
+              "get": {
+                "summary": "Lista de impressoras",
+                "responses": {
+                  "200": {
+                    "description": "Página de impressoras"
+                  }
+                }
+              }
+            },
+            "/impressoras/update_sector": {
+              "post": {
+                "summary": "Atualizar setor de impressora",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "printer_name": {
+                            "type": "string"
+                          },
+                          "sector": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/impressoras/export": {
+              "get": {
+                "summary": "Exportar relatório de impressoras",
+                "responses": {
+                  "200": {
+                    "description": "Arquivo Excel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Comparativo",
+        "description": "Comparativo de períodos (mês atual vs anterior, trimestres, etc)",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/comparativo.html",
+          "serv/modules/comparativo.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/comparativo": {
+              "get": {
+                "summary": "Página de comparativo",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/comparativo": {
+              "get": {
+                "summary": "API de comparativo",
+                "parameters": [
+                  {
+                    "name": "periodo",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Dados comparativos"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Comparativo customizado",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "periodo1": {
+                            "type": "string"
+                          },
+                          "periodo2": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Quotas",
+        "description": "Sistema de gestão de quotas e limites de impressão",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/admin_quotas.html",
+          "serv/modules/quotas.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/quotas": {
+              "get": {
+                "summary": "Listar quotas",
+                "responses": {
+                  "200": {
+                    "description": "Lista de quotas"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar quota",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "tipo": {
+                            "type": "string"
+                          },
+                          "identificador": {
+                            "type": "string"
+                          },
+                          "limite": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/admin/quotas": {
+              "get": {
+                "summary": "Página de administração de quotas",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar ou atualizar quota",
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Alertas",
+        "description": "Sistema de alertas e notificações",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/alertas.html",
+          "serv/modules/alertas.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/alertas": {
+              "get": {
+                "summary": "Página de alertas",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/alertas": {
+              "get": {
+                "summary": "Listar alertas",
+                "responses": {
+                  "200": {
+                    "description": "Lista de alertas"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar alerta",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/alertas/{alerta_id}/ler": {
+              "post": {
+                "summary": "Marcar alerta como lido",
+                "parameters": [
+                  {
+                    "name": "alerta_id",
+                    "in": "path",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Sugestões",
+        "description": "Sistema de sugestões de economia (duplex, P&B, etc)",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/sugestoes.html",
+          "serv/modules/sugestoes.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/sugestoes": {
+              "get": {
+                "summary": "Página de sugestões",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/sugestoes": {
+              "get": {
+                "summary": "Listar sugestões",
+                "responses": {
+                  "200": {
+                    "description": "Lista de sugestões"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar sugestão",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Metas",
+        "description": "Sistema de gestão de metas de impressão",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/admin_metas.html",
+          "serv/modules/metas.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/metas": {
+              "get": {
+                "summary": "Listar metas",
+                "responses": {
+                  "200": {
+                    "description": "Lista de metas"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar meta",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/admin/metas": {
+              "get": {
+                "summary": "Página de administração de metas",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar ou atualizar meta"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Orçamento",
+        "description": "Gestão de orçamentos e projeções por setor",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/admin_orcamento.html",
+          "serv/modules/orcamento.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/orcamento": {
+              "get": {
+                "summary": "Listar orçamentos",
+                "parameters": [
+                  {
+                    "name": "setor",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "periodo",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Dados de orçamento"
+                  }
+                }
+              }
+            },
+            "/admin/orcamento": {
+              "get": {
+                "summary": "Página de administração de orçamento",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar ou atualizar orçamento"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Análise de Padrões",
+        "description": "Análise de padrões de uso (horários, dias, anomalias, tendências)",
+        "files": [
+          "serv/servidor.py",
+          "serv/modules/analise_padroes.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/analise/horarios": {
+              "get": {
+                "summary": "Análise de padrões por horário",
+                "responses": {
+                  "200": {
+                    "description": "Dados de análise"
+                  }
+                }
+              }
+            },
+            "/api/analise/dias": {
+              "get": {
+                "summary": "Análise de padrões por dia",
+                "responses": {
+                  "200": {
+                    "description": "Dados de análise"
+                  }
+                }
+              }
+            },
+            "/api/analise/anomalias": {
+              "get": {
+                "summary": "Detecção de anomalias",
+                "responses": {
+                  "200": {
+                    "description": "Lista de anomalias"
+                  }
+                }
+              }
+            },
+            "/api/analise/tendencia": {
+              "get": {
+                "summary": "Análise de tendências",
+                "responses": {
+                  "200": {
+                    "description": "Dados de tendência"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Inteligência Artificial",
+        "description": "Módulos de IA para previsão, detecção de anomalias, chatbot, etc",
+        "files": [
+          "serv/servidor.py",
+          "serv/modules/ia_previsao_custos.py",
+          "serv/modules/ia_deteccao_anomalias.py",
+          "serv/modules/ia_otimizacao.py",
+          "serv/modules/ia_alertas_inteligentes.py",
+          "serv/modules/ia_chatbot.py",
+          "serv/modules/ia_chatbot_gratuito.py",
+          "serv/modules/ia_analise_preditiva.py",
+          "serv/modules/ia_recomendacoes.py",
+          "serv/modules/ia_tendencias.py",
+          "serv/modules/ia_score_eficiencia.py",
+          "serv/modules/ia_relatorios_narrativos.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/ia/previsao-custos": {
+              "get": {
+                "summary": "Previsão de custos futuros",
+                "responses": {
+                  "200": {
+                    "description": "Previsão de custos"
+                  }
+                }
+              }
+            },
+            "/ia/anomalias": {
+              "get": {
+                "summary": "Detecção de anomalias com IA",
+                "responses": {
+                  "200": {
+                    "description": "Anomalias detectadas"
+                  }
+                }
+              }
+            },
+            "/ia/otimizacoes": {
+              "get": {
+                "summary": "Sugestões de otimização",
+                "responses": {
+                  "200": {
+                    "description": "Otimizações sugeridas"
+                  }
+                }
+              }
+            },
+            "/ia/alertas-inteligentes": {
+              "get": {
+                "summary": "Alertas inteligentes baseados em padrões",
+                "responses": {
+                  "200": {
+                    "description": "Lista de alertas"
+                  }
+                }
+              }
+            },
+            "/ia/chatbot": {
+              "post": {
+                "summary": "Chatbot inteligente",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "pergunta": {
+                            "type": "string"
+                          },
+                          "metodo": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/ia/apis-disponiveis": {
+              "get": {
+                "summary": "Lista APIs de IA disponíveis",
+                "responses": {
+                  "200": {
+                    "description": "Status das APIs"
+                  }
+                }
+              }
+            },
+            "/ia/previsao-materiais": {
+              "get": {
+                "summary": "Previsão de reposição de materiais",
+                "responses": {
+                  "200": {
+                    "description": "Previsão de materiais"
+                  }
+                }
+              }
+            },
+            "/ia/recomendacoes": {
+              "get": {
+                "summary": "Recomendações baseadas em histórico",
+                "responses": {
+                  "200": {
+                    "description": "Lista de recomendações"
+                  }
+                }
+              }
+            },
+            "/ia/tendencias": {
+              "get": {
+                "summary": "Análise de tendências com IA",
+                "responses": {
+                  "200": {
+                    "description": "Tendências identificadas"
+                  }
+                }
+              }
+            },
+            "/ia/score-eficiencia": {
+              "get": {
+                "summary": "Score de eficiência por usuário/setor",
+                "responses": {
+                  "200": {
+                    "description": "Scores de eficiência"
+                  }
+                }
+              }
+            },
+            "/ia/relatorio-narrativo": {
+              "get": {
+                "summary": "Geração de relatório narrativo",
+                "responses": {
+                  "200": {
+                    "description": "Relatório narrativo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Filtros Salvos",
+        "description": "Sistema para salvar e reutilizar filtros de busca",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/filtros_salvos.html",
+          "serv/modules/filtros_salvos.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/filtros": {
+              "get": {
+                "summary": "Página de filtros salvos",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/filtros/salvar": {
+              "post": {
+                "summary": "Salvar filtro",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/filtros/listar": {
+              "get": {
+                "summary": "Listar filtros salvos",
+                "responses": {
+                  "200": {
+                    "description": "Lista de filtros"
+                  }
+                }
+              }
+            },
+            "/api/filtros/deletar": {
+              "delete": {
+                "summary": "Deletar filtro",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Comentários",
+        "description": "Sistema de comentários e tags para eventos",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/comentarios.html",
+          "serv/modules/comentarios.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/comentarios": {
+              "get": {
+                "summary": "Página de comentários",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/comentarios/adicionar": {
+              "post": {
+                "summary": "Adicionar comentário",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "event_id": {
+                            "type": "integer"
+                          },
+                          "comentario": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/comentarios/listar": {
+              "get": {
+                "summary": "Listar comentários",
+                "parameters": [
+                  {
+                    "name": "event_id",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Lista de comentários"
+                  }
+                }
+              }
+            },
+            "/api/comentarios/deletar": {
+              "delete": {
+                "summary": "Deletar comentário",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Aprovações",
+        "description": "Sistema de aprovação de impressões antes da execução",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/aprovacoes.html",
+          "serv/modules/aprovacao_impressoes.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/aprovacoes": {
+              "get": {
+                "summary": "Página de aprovações",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/aprovacoes/pendentes": {
+              "get": {
+                "summary": "Listar aprovações pendentes",
+                "responses": {
+                  "200": {
+                    "description": "Lista de aprovações pendentes"
+                  }
+                }
+              }
+            },
+            "/api/aprovacoes/aprovar": {
+              "post": {
+                "summary": "Aprovar impressão",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "event_id": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/aprovacoes/rejeitar": {
+              "post": {
+                "summary": "Rejeitar impressão",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "event_id": {
+                            "type": "integer"
+                          },
+                          "motivo": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Heatmaps",
+        "description": "Visualização de padrões de uso através de heatmaps",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/heatmaps.html",
+          "serv/modules/heatmap.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/heatmaps": {
+              "get": {
+                "summary": "Página de heatmaps",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/heatmap/horarios": {
+              "get": {
+                "summary": "Heatmap de horários",
+                "responses": {
+                  "200": {
+                    "description": "Dados do heatmap"
+                  }
+                }
+              }
+            },
+            "/api/heatmap/setores": {
+              "get": {
+                "summary": "Heatmap de setores",
+                "responses": {
+                  "200": {
+                    "description": "Dados do heatmap"
+                  }
+                }
+              }
+            },
+            "/api/heatmap/semanal": {
+              "get": {
+                "summary": "Heatmap semanal",
+                "responses": {
+                  "200": {
+                    "description": "Dados do heatmap"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Gamificação",
+        "description": "Sistema de pontos, badges e ranking de usuários",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/gamificacao.html",
+          "serv/modules/gamificacao.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/gamificacao": {
+              "get": {
+                "summary": "Página de gamificação",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/api/gamificacao/ranking": {
+              "get": {
+                "summary": "Ranking de usuários",
+                "responses": {
+                  "200": {
+                    "description": "Ranking em JSON"
+                  }
+                }
+              }
+            },
+            "/api/gamificacao/pontos": {
+              "get": {
+                "summary": "Pontos do usuário",
+                "responses": {
+                  "200": {
+                    "description": "Pontos em JSON"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Exportação Avançada",
+        "description": "Exportação de dados em CSV, PNG e outras formatos",
+        "files": [
+          "serv/servidor.py",
+          "serv/modules/exportacao_avancada.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/export/csv": {
+              "post": {
+                "summary": "Exportar dados em CSV",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/api/export/png": {
+              "post": {
+                "summary": "Exportar gráfico como PNG",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/dashboard/export": {
+              "get": {
+                "summary": "Exportar dashboard para Excel",
+                "responses": {
+                  "200": {
+                    "description": "Arquivo Excel"
+                  }
+                }
+              }
+            },
+            "/dashboard/export/pdf": {
+              "get": {
+                "summary": "Exportar dashboard para PDF",
+                "responses": {
+                  "200": {
+                    "description": "Arquivo PDF"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Administração",
+        "description": "Funcionalidades administrativas (preços, configurações, auditoria, backup)",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/admin_precos.html",
+          "serv/templates/admin_configuracoes.html",
+          "serv/templates/admin_auditoria.html",
+          "serv/templates/admin_backup.html",
+          "serv/modules/auditoria.py",
+          "serv/modules/backup.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/admin/precos": {
+              "get": {
+                "summary": "Página de configuração de preços",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Atualizar preços"
+              }
+            },
+            "/admin/configuracoes": {
+              "get": {
+                "summary": "Página de configurações",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Atualizar configurações"
+              }
+            },
+            "/admin/logins": {
+              "get": {
+                "summary": "Histórico de logins",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/admin/auditoria": {
+              "get": {
+                "summary": "Log de auditoria",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/admin/backup": {
+              "get": {
+                "summary": "Página de backup",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar backup ou restaurar"
+              }
+            },
+            "/admin/relatorios_agendados": {
+              "get": {
+                "summary": "Relatórios agendados",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar ou atualizar relatório agendado"
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Dashboard Widgets",
+        "description": "Sistema de widgets personalizáveis para o dashboard",
+        "files": [
+          "serv/servidor.py",
+          "serv/modules/dashboard_widgets.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/dashboard/widgets": {
+              "get": {
+                "summary": "Listar widgets do usuário",
+                "responses": {
+                  "200": {
+                    "description": "Lista de widgets"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Criar widget",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "tipo": {
+                            "type": "string"
+                          },
+                          "posicao": {
+                            "type": "integer"
+                          },
+                          "configuracao": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "put": {
+                "summary": "Atualizar widget",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "summary": "Deletar widget",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Recuperação de Senha",
+        "description": "Sistema de recuperação e reset de senha",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/recuperar_senha.html",
+          "serv/templates/resetar_senha.html"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/recuperar-senha": {
+              "get": {
+                "summary": "Página de recuperação de senha",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Solicitar recuperação de senha",
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "email": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/resetar-senha/{token}": {
+              "get": {
+                "summary": "Página de reset de senha",
+                "parameters": [
+                  {
+                    "name": "token",
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              },
+              "post": {
+                "summary": "Resetar senha com token",
+                "parameters": [
+                  {
+                    "name": "token",
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "password": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Status do Sistema",
+        "description": "Endpoint para verificar status e health do sistema",
+        "files": [
+          "serv/servidor.py",
+          "serv/templates/status_sistema.html"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/status": {
+              "get": {
+                "summary": "Página de status do sistema",
+                "responses": {
+                  "200": {
+                    "description": "Página renderizada"
+                  }
+                }
+              }
+            },
+            "/health": {
+              "get": {
+                "summary": "Health check endpoint",
+                "responses": {
+                  "200": {
+                    "description": "Sistema saudável"
+                  },
+                  "503": {
+                    "description": "Sistema com problemas"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Busca",
+        "description": "API de busca de eventos",
+        "files": [
+          "serv/servidor.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/search": {
+              "get": {
+                "summary": "Buscar eventos",
+                "parameters": [
+                  {
+                    "name": "q",
+                    "in": "query",
+                    "schema": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "schema": {
+                      "type": "integer"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Resultados da busca"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Tendências e Gráficos",
+        "description": "APIs para gráficos e tendências de impressão",
+        "files": [
+          "serv/servidor.py"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/api/impressao-tendencia": {
+              "get": {
+                "summary": "Tendência de impressões",
+                "responses": {
+                  "200": {
+                    "description": "Dados de tendência"
+                  }
+                }
+              }
+            },
+            "/api/impressao-dia": {
+              "get": {
+                "summary": "Impressões por dia",
+                "responses": {
+                  "200": {
+                    "description": "Dados por dia"
+                  }
+                }
+              }
+            },
+            "/api/custo-historico": {
+              "get": {
+                "summary": "Histórico de custos",
+                "responses": {
+                  "200": {
+                    "description": "Dados históricos"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

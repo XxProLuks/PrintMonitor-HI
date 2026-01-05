@@ -1,0 +1,14 @@
+{
+    "server_url": "http://SEU_IP_AQUI:5002/api/print_events",
+    "retry_interval": 30,
+    "check_interval": 5,
+    "max_retries": 3,
+    "log_level": "INFO",
+    "batch_size": 50,
+    "process_all_on_start": true,
+    "use_wmi_backup": true,
+    "use_spool_interceptor": false,
+    "use_snmp_validation": false,
+    "snmp_community": "public"
+}
+

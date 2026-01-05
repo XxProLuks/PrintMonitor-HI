@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Alertas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header mb-4">
+        <h1><i class="bi bi-bell-fill"></i> Alertas</h1>
+        <p class="text-muted">Central de notificações e alertas do sistema</p>
+        {% if nao_lidos > 0 %}
+        <span class="badge bg-danger badge-modern">{{ nao_lidos }} não lidos</span>
+        {% endif %}
+    </div>
+
+    {% if alertas %}
+    <div class="table-responsive">
+        <table class="table table-modern">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Nível</th>
+                    <th>Título</th>
+                    <th>Mensagem</th>
+                    <th>Referência</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alerta in alertas %}
+                <tr class="{% if not alerta.lido %}table-warning{% endif %}">
+                    <td>{{ alerta.created_at[:19] if alerta.created_at else 'N/A' }}</td>
+                    <td>
+                        {% if alerta.nivel == 'error' %}
+                        <span class="badge bg-danger badge-modern">Erro</span>
+                        {% elif alerta.nivel == 'warning' %}
+                        <span class="badge bg-warning badge-modern">Aviso</span>
+                        {% else %}
+                        <span class="badge bg-info badge-modern">Info</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ alerta.titulo }}</strong></td>
+                    <td>{{ alerta.mensagem or 'N/A' }}</td>
+                    <td>{{ alerta.referencia or 'Geral' }}</td>
+                    <td>
+                        {% if alerta.lido %}
+                        <span class="badge bg-success badge-modern">Lido</span>
+                        {% else %}
+                        <span class="badge bg-warning badge-modern">Não lido</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not alerta.lido %}
+                        <button class="btn btn-sm btn-primary" onclick="marcarLido({{ alerta.id }})">
+                            <i class="bi bi-check"></i> Marcar como lido
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Nenhum alerta encontrado.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function marcarLido(alertaId) {
+    fetch(`/api/alertas/${alertaId}/ler`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('Erro ao marcar alerta como lido');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao marcar alerta como lido');
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,4 @@
+pywin32>=300
+requests>=2.25.0
+pysnmp>=4.4.0; platform_system=="Windows"
+

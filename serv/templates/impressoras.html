@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Impressoras - Print Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2><i class="bi bi-printer"></i> Impressoras</h2>
+</div>
+
+<div class="filter-card">
+  <form class="row g-3" method="get" action="{{ url_for('impressoras') }}">
+    <div class="col-md-3">
+      <label for="start_date" class="form-label"><i class="bi bi-calendar-event"></i> Data Início</label>
+      <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+    </div>
+    <div class="col-md-3">
+      <label for="end_date" class="form-label"><i class="bi bi-calendar-event-fill"></i> Data Fim</label>
+      <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+    </div>
+    <div class="col-md-4">
+      <label for="filtro_impressora" class="form-label"><i class="bi bi-search"></i> Filtro Impressora</label>
+      <input type="text" id="filtro_impressora" name="filtro_impressora" class="form-control" placeholder="Digite o nome da impressora..." value="{{ filtro_impressora }}">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary btn-modern w-100">
+        <i class="bi bi-funnel"></i> Filtrar
+      </button>
+    </div>
+    <div class="col-12">
+      <a href="{{ url_for('export_impressoras_excel', start_date=start_date, end_date=end_date, filtro_impressora=filtro_impressora) }}" 
+         class="btn btn-success btn-modern">
+        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+      </a>
+    </div>
+  </form>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-modern">
+    <thead>
+      <tr>
+        <th><i class="bi bi-printer"></i> Impressora</th>
+        <th><i class="bi bi-building"></i> Setor</th>
+        <th><i class="bi bi-printer"></i> Total Impressões</th>
+        <th><i class="bi bi-file-text"></i> Total Páginas</th>
+        <th><i class="bi bi-palette-fill"></i> Páginas Color</th>
+        <th><i class="bi bi-palette"></i> Páginas P&B</th>
+        <th><i class="bi bi-file-earmark-arrow-up"></i> Duplex</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for imp in impressoras %}
+      <tr data-printer="{{ imp['printer_name'] }}">
+        <td><strong>{{ imp['printer_name'] }}</strong></td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm sector-select" 
+                    data-printer="{{ imp['printer_name'] }}" 
+                    style="min-width: 150px;">
+              <option value="">-- Sem Setor --</option>
+              {% for setor in setores_disponiveis %}
+              <option value="{{ setor }}" {% if (imp['sector'] if 'sector' in imp else '') == setor %}selected{% endif %}>
+                {{ setor }}
+              </option>
+              {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-outline-primary save-sector-btn" 
+                    data-printer="{{ imp['printer_name'] }}"
+                    title="Salvar setor">
+              <i class="bi bi-check-lg"></i>
+            </button>
+          </div>
+        </td>
+        <td><span class="badge bg-primary badge-modern">{{ imp['total_impressos'] }}</span></td>
+        <td><span class="badge bg-info badge-modern">{{ imp['total_paginas'] }}</span></td>
+        <td>
+          {% if imp['paginas_color'] > 0 %}
+            <span class="badge bg-danger badge-modern">{{ imp['paginas_color'] }}</span>
+          {% else %}
+            <span class="text-muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if imp['paginas_bw'] > 0 %}
+            <span class="badge bg-secondary badge-modern">{{ imp['paginas_bw'] }}</span>
+          {% else %}
+            <span class="text-muted">0</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="d-flex flex-column gap-1">
+            {% if (imp['impressoes_duplex'] if 'impressoes_duplex' in imp else 0) > 0 %}
+              <span class="badge bg-success badge-modern" title="Impressões em Duplex">
+                <i class="bi bi-file-earmark-arrow-up"></i> {{ imp['impressoes_duplex'] if 'impressoes_duplex' in imp else 0 }}
+              </span>
+            {% endif %}
+            {% if (imp['impressoes_simplex'] if 'impressoes_simplex' in imp else 0) > 0 %}
+              <span class="badge bg-secondary badge-modern" title="Impressões Simples">
+                <i class="bi bi-file-earmark"></i> {{ imp['impressoes_simplex'] if 'impressoes_simplex' in imp else 0 }}
+              </span>
+            {% endif %}
+            {% set duplex_count = (imp['impressoes_duplex'] if 'impressoes_duplex' in imp else 0) %}
+            {% set simplex_count = (imp['impressoes_simplex'] if 'impressoes_simplex' in imp else 0) %}
+            {% if duplex_count == 0 and simplex_count == 0 %}
+              <span class="text-muted small">N/A</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="text-muted mt-3">Nenhum registro encontrado.</p>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveButtons = document.querySelectorAll('.save-sector-btn');
+    
+    saveButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const printerName = this.getAttribute('data-printer');
+            const row = this.closest('tr');
+            const select = row.querySelector('.sector-select');
+            const sector = select.value;
+            
+            // Desabilita botão durante a requisição
+            this.disabled = true;
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+            
+            fetch('/impressoras/update_sector', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    printer_name: printerName,
+                    sector: sector
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Feedback visual
+                    this.innerHTML = '<i class="bi bi-check-lg"></i>';
+                    this.classList.remove('btn-outline-primary');
+                    this.classList.add('btn-success');
+                    
+                    // Volta ao estado normal após 2 segundos
+                    setTimeout(() => {
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-outline-primary');
+                        this.innerHTML = originalHTML;
+                    }, 2000);
+                    
+                    // Mostra notificação
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification(data.message || 'Erro ao salvar setor', 'error');
+                    this.innerHTML = originalHTML;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                showNotification('Erro ao salvar setor', 'error');
+                this.innerHTML = originalHTML;
+            })
+            .finally(() => {
+                this.disabled = false;
+            });
+        });
+    });
+    
+    // Permite salvar com Enter no select
+    document.querySelectorAll('.sector-select').forEach(select => {
+        select.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const btn = this.closest('tr').querySelector('.save-sector-btn');
+                if (btn) btn.click();
+            }
+        });
+    });
+    
+    function showNotification(message, type) {
+        // Cria uma notificação simples
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(notification);
+        
+        // Remove após 3 segundos
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
