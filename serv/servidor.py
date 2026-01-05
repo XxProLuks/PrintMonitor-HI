@@ -74,6 +74,35 @@ from modules.helper_db import (
 # Importa connection pooling
 from modules.db_pool import init_db_pool, get_db_connection
 
+# Importa módulo de eventos WebSocket
+from modules.websocket_events import (
+    init_websocket,
+    register_handlers as register_ws_handlers,
+    emit_print_event,
+    emit_stats_update,
+    emit_alert,
+)
+
+# Importa módulo de integração AD
+from modules.ad_integration import (
+    LDAP_AVAILABLE,
+    is_ad_configured,
+    test_ad_connection,
+    sync_users_from_ad,
+    sync_sectors_from_ad,
+    authenticate_with_ad,
+)
+
+# Importa módulo de descoberta de impressoras
+from modules.printer_discovery import (
+    SNMP_AVAILABLE,
+    discover_printers_snmp,
+    get_printer_info_snmp,
+    detect_duplex_capability,
+    auto_register_printer,
+    get_local_network,
+)
+
 # Carrega variáveis de ambiente (opcional)
 try:
     from dotenv import load_dotenv
@@ -128,8 +157,12 @@ socketio = None
 if SOCKETIO_AVAILABLE:
     socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
     logging.getLogger(__name__).info("🔌 WebSocket (SocketIO) habilitado!")
+    # Inicializa módulo de eventos WebSocket
+    init_websocket(socketio)
+    register_ws_handlers(socketio)
 else:
     logging.getLogger(__name__).warning("⚠️ flask-socketio não instalado. WebSocket desabilitado.")
+    init_websocket(None)
 
 # Usa caminho relativo ao diretório do servidor (deve vir antes de usar BASE_DIR)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -8529,6 +8562,157 @@ def broadcast_stats_update():
                 
         except Exception as e:
             logger.error(f"Erro ao emitir stats WebSocket: {e}")
+
+
+# ============================================================================
+# API: INTEGRAÇÃO ACTIVE DIRECTORY
+# ============================================================================
+
+@app.route("/api/admin/ad/status", methods=["GET"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_ad_status():
+    """Retorna status da integração AD."""
+    return jsonify({
+        "ldap_available": LDAP_AVAILABLE,
+        "configured": is_ad_configured(),
+        "server": os.getenv('AD_SERVER', 'não configurado')
+    })
+
+
+@app.route("/api/admin/ad/test", methods=["POST"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_ad_test():
+    """Testa conexão com Active Directory."""
+    success, message = test_ad_connection()
+    return jsonify({
+        "success": success,
+        "message": message
+    }), 200 if success else 400
+
+
+@app.route("/api/admin/ad/sync/users", methods=["POST"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_ad_sync_users():
+    """Sincroniza usuários do AD."""
+    try:
+        with get_db() as conn:
+            result = sync_users_from_ad(conn)
+        return jsonify(result), 200 if result['success'] else 400
+    except Exception as e:
+        logger.error(f"Erro na sincronização AD: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@app.route("/api/admin/ad/sync/sectors", methods=["POST"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_ad_sync_sectors():
+    """Busca setores do AD."""
+    result = sync_sectors_from_ad()
+    return jsonify(result), 200 if result['success'] else 400
+
+
+# ============================================================================
+# API: DESCOBERTA SNMP DE IMPRESSORAS
+# ============================================================================
+
+@app.route("/api/admin/discover_snmp", methods=["POST"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_discover_snmp():
+    """
+    Descobre impressoras na rede via SNMP.
+    
+    Body JSON:
+        network: Rede a escanear (opcional, detecta automaticamente)
+        community: Community string SNMP (default: public)
+        auto_register: Se cadastra automaticamente (default: false)
+    """
+    try:
+        data = request.get_json() or {}
+        network = data.get('network') or get_local_network()
+        community = data.get('community', 'public')
+        auto_register = data.get('auto_register', False)
+        
+        if not network:
+            return jsonify({
+                "success": False,
+                "message": "Não foi possível detectar a rede local"
+            }), 400
+        
+        # Descobre impressoras
+        printers = discover_printers_snmp(network, community)
+        
+        registered = []
+        if auto_register and printers:
+            with get_db() as conn:
+                for printer in printers:
+                    success, msg = auto_register_printer(conn, printer)
+                    if success:
+                        registered.append(printer.get('name'))
+        
+        return jsonify({
+            "success": True,
+            "snmp_available": SNMP_AVAILABLE,
+            "network": network,
+            "printers_found": len(printers),
+            "printers": printers,
+            "registered": registered
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro na descoberta SNMP: {e}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+@app.route("/api/admin/printer_info_snmp/<ip>", methods=["GET"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_printer_info_snmp(ip):
+    """Obtém informações de impressora via SNMP."""
+    community = request.args.get('community', 'public')
+    
+    info = get_printer_info_snmp(ip, community)
+    
+    if info:
+        return jsonify({
+            "success": True,
+            "info": info
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "message": f"Não foi possível obter informações de {ip}"
+        }), 404
+
+
+@app.route("/api/admin/detect_duplex/<ip>", methods=["GET"])
+@login_required
+@admin_required
+@csrf_exempt_if_enabled
+def api_detect_duplex(ip):
+    """Detecta capacidade duplex de uma impressora via SNMP."""
+    community = request.args.get('community', 'public')
+    
+    duplex = detect_duplex_capability(ip, community)
+    
+    return jsonify({
+        "ip": ip,
+        "duplex_capable": duplex,
+        "detected": duplex is not None
+    })
 
 
 # ============================================================================
